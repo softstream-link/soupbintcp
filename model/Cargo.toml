@@ -24,6 +24,6 @@ env_logger = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }
 
 [features]
-default = []
+default = [] # TODO remember to leave this blank during release
 full = ["unittest"]
 unittest = ["dep:log", "dep:env_logger", "dep:colored"]
