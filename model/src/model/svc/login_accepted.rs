@@ -45,6 +45,7 @@ impl Display for LoginAccepted {
 }
 
 #[cfg(test)]
+#[cfg(feature="unittest")]
 mod test {
     use super::*;
     use crate::unittest::setup;

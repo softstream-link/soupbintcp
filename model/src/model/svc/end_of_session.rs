@@ -26,6 +26,7 @@ impl Display for EndOfSession {
 }
 
 #[cfg(test)]
+#[cfg(feature="unittest")]
 mod test {
     use super::*;
     use crate::unittest::setup;

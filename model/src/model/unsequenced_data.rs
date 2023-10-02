@@ -4,7 +4,7 @@ use std::fmt;
 
 use crate::prelude::Nil;
 
-use super::payload::SamplePayload;
+// use super::payload::SamplePayload;
 use super::types::PacketTypeUnsequencedData;
 
 pub const UNSEQUENCED_DATA_BYTE_LEN: usize = 3;
@@ -48,11 +48,6 @@ where
     }
 }
 
-impl Default for UPayload<SamplePayload> {
-    fn default() -> Self {
-        UPayload::new(SamplePayload::default())
-    }
-}
 impl Default for UPayload<Nil>{
     fn default() -> Self {
         UPayload::new(Nil)
@@ -60,9 +55,10 @@ impl Default for UPayload<Nil>{
 }
 
 #[cfg(test)]
+#[cfg(feature="unittest")]
 mod test {
     use super::*;
-    use crate::model::payload::SamplePayload;
+    use crate::model::sample_payload::SamplePayload;
     use crate::unittest::setup;
     use log::info;
 

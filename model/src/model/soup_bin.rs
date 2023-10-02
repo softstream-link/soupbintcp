@@ -116,6 +116,7 @@ where
 }
 
 #[cfg(test)]
+#[cfg(feature="unittest")]
 mod test {
 
     use log::info;

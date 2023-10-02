@@ -65,6 +65,7 @@ pub mod field_types{
         }
     }
     #[cfg(test)]
+    #[cfg(feature="unittest")]
     mod test{
         use log::info;
         use crate::unittest::setup;

@@ -28,6 +28,7 @@ impl Display for LogoutRequest {
 }
 
 #[cfg(test)]
+#[cfg(feature="unittest")]
 mod test {
     use super::*;
     use crate::unittest::setup;

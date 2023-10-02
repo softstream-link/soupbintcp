@@ -45,9 +45,10 @@ impl<Payload: ByteSerializeStack + ByteDeserializeSlice<Payload> + ByteSerialize
 }
 
 #[cfg(test)]
+#[cfg(feature="unittest")]
 mod test {
     use super::*;
-    use crate::model::payload::SamplePayload;
+    use crate::model::sample_payload::SamplePayload;
     use crate::unittest::setup;
     use log::info;
 

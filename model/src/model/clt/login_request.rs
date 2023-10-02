@@ -81,6 +81,7 @@ impl Display for LoginRequest {
 }
 
 #[cfg(test)]
+#[cfg(feature="unittest")]
 mod test {
     use super::*;
     use byteserde::prelude::*;
