@@ -1,0 +1,28 @@
+[package]
+name = "soupbintcp_model"
+version.workspace = true
+authors.workspace = true
+readme.workspace = true
+license-file.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+byteserde = { workspace = true }
+byteserde_derive = { workspace = true }
+byteserde_types = { workspace = true }
+derive_more = { workspace = true }
+
+# [dev-dependencies]
+log = { workspace = true, optional = true }
+env_logger = { workspace = true, optional = true }
+colored = { workspace = true, optional = true }
+
+[features]
+default = ["unittest"]
+unittest = ["dep:log", "dep:env_logger", "dep:colored"]
