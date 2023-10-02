@@ -10,7 +10,7 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Data model bindings for soupbintcp exchange protocol"
 
 [dependencies]
 byteserde = { workspace = true }
