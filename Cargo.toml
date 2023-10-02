@@ -1,0 +1,28 @@
+[workspace]
+members = ["model"]
+
+resolver = "2"
+
+[workspace.package]
+version = "4.1.0"                                            # NOTE remembe to update this and sbelow dependencies for byteserde and byteserde_derive
+authors = ["Softstream <softstream.link@gmail.com>"]
+readme = "readme.md"
+license-file = "LICENSE"
+edition = "2021"
+rust-version = "1.69"
+repository = "https://github.com/softstream-link/soupbintcp"
+keywords = ["exchange protocol"]
+categories = ["exchange protocol"]
+
+
+[workspace.dependencies]
+byteserde = { version = "0.4.0" }
+byteserde_derive = { version = "0.4.0" }
+byteserde_types = { version = "0.4.0" }
+derive_more = "0.99"                     # try_into, etc
+
+
+# logging
+log = { version = "0.4" }
+env_logger = { version = "0.10" }
+colored = { version = "2.0" }
