@@ -11,7 +11,7 @@ license-file = "LICENSE"
 edition = "2021"
 rust-version = "1.69"
 repository = "https://github.com/softstream-link/soupbintcp"
-keywords = ["exchange protocol"]
+keywords = ["exchange", "protocol"]
 categories = ["API bindings"]
 
 
