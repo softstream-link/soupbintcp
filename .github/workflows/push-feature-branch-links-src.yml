@@ -13,7 +13,7 @@ jobs:
         with:
           path: soupbintcp
       
-      - name: Check out byteserde v4
+      - name: Check out links
         uses: actions/checkout@v3 
         with:
           repository: 'softstream-link/links'

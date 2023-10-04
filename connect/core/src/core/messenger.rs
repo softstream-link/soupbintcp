@@ -6,8 +6,8 @@ use byteserde::prelude::{from_slice, to_bytes_stack};
 #[rustfmt::skip]
 
 /// Performs two tasks
-///  * Divides [bytes::BytesMut] into frames and deserializes into a [SBSvcMsg] type
-///  * Takes [SBCltMsg] type and serializes into byte array 
+///  * Divides [bytes::BytesMut] into frames and deserializes into a [SvcSoupBinTcpMsg] type
+///  * Takes [CltSoupBinTcpMsg] type and serializes into byte array 
 #[derive(Debug)]
 pub struct CltSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     phantom: PhantomData<(RecvP, SendP)>,
@@ -46,8 +46,8 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
 }
 
 /// Performs two tasks
-///  * Divides [bytes::BytesMut] into frames and deserializes into a [SBCltcMsg] type
-///  * Takes [SBSvcMsg] type and serializes into byte array
+///  * Divides [bytes::BytesMut] into frames and deserializes into a [CltSoupBinTcpMsg] type
+///  * Takes [SvcSoupBinTcpMsg] type and serializes into byte array
 #[derive(Debug)]
 pub struct SvcSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>>
 {
