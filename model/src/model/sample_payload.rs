@@ -3,7 +3,7 @@ use byteserde_derive::{
 };
 use byteserde_types::string_ascii_fixed;
 
-use crate::prelude::UPayload;
+use crate::prelude::{SoupBinTcpPayload, UPayload};
 
 #[rustfmt::skip]
 string_ascii_fixed!(Context1, 10, b' ', true, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
@@ -16,6 +16,7 @@ pub struct SamplePayload {
     pub context1: Context1,
     pub context2: Context2,
 }
+impl SoupBinTcpPayload<SamplePayload> for SamplePayload {}
 
 impl Default for SamplePayload {
     fn default() -> Self {

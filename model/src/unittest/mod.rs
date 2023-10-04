@@ -38,38 +38,36 @@ pub mod setup {
     }
     pub mod model {
         use crate::prelude::*;
-        use byteserde::prelude::*;
 
         #[rustfmt::skip]
-        pub fn svc_msgs_default<SvcPayload>() -> Vec<SBSvcMsg<SvcPayload>>
+        pub fn svc_msgs_default<P>() -> Vec<SvcSoupBinTcpMsg<P>>
         where
-            SvcPayload: ByteSerializeStack + ByteDeserializeSlice<SvcPayload> + ByteSerializedLenOf + PartialEq + Clone + Default + std::fmt::Debug,
+            P: SoupBinTcpPayload<P> + Default,
         {
             vec![
-                SBSvcMsg::HBeat(SvcHeartbeat::default()),
-                SBSvcMsg::Dbg(Debug::default()),
-                SBSvcMsg::LoginAcc(LoginAccepted::default()),
-                SBSvcMsg::LoginRej(LoginRejected::not_authorized()),
-                SBSvcMsg::End(EndOfSession::default()),
-                SBSvcMsg::S(SPayload::new(SvcPayload::default())),
-                SBSvcMsg::U(UPayload::new(SvcPayload::default())),
+                SvcSoupBinTcpMsg::HBeat(SvcHeartbeat::default()),
+                SvcSoupBinTcpMsg::Dbg(Debug::default()),
+                SvcSoupBinTcpMsg::LoginAcc(LoginAccepted::default()),
+                SvcSoupBinTcpMsg::LoginRej(LoginRejected::not_authorized()),
+                SvcSoupBinTcpMsg::End(EndOfSession::default()),
+                SvcSoupBinTcpMsg::S(SPayload::new(P::default())),
+                SvcSoupBinTcpMsg::U(UPayload::new(P::default())),
             ]
         }
 
         #[rustfmt::skip]
-        pub fn clt_msgs_default<T>() -> Vec<SBCltMsg<T>>
+        pub fn clt_msgs_default<P>() -> Vec<CltSoupBinTcpMsg<P>>
         where
-            T: ByteSerializeStack + ByteDeserializeSlice<T> + ByteSerializedLenOf + PartialEq + Clone + Default + std::fmt::Debug,
+            P: SoupBinTcpPayload<P> + Default,
         {
             vec![
-                SBCltMsg::HBeat(CltHeartbeat::default()),
-                SBCltMsg::Dbg(Debug::default()),
-                SBCltMsg::Login(LoginRequest::default()),
-                SBCltMsg::Logout(LogoutRequest::default()),
-                SBCltMsg::S(SPayload::new(T::default())),
-                SBCltMsg::U(UPayload::new(T::default())),
+                CltSoupBinTcpMsg::HBeat(CltHeartbeat::default()),
+                CltSoupBinTcpMsg::Dbg(Debug::default()),
+                CltSoupBinTcpMsg::Login(LoginRequest::default()),
+                CltSoupBinTcpMsg::Logout(LogoutRequest::default()),
+                CltSoupBinTcpMsg::S(SPayload::new(P::default())),
+                CltSoupBinTcpMsg::U(UPayload::new(P::default())),
             ]
         }
-        
     }
 }

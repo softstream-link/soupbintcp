@@ -1,0 +1,10 @@
+{
+    "rust-analyzer.cargo.features": [
+        "full"
+    ],
+    "cSpell.words": [
+        "hbeat",
+        "sdata",
+        "udata"
+    ]
+}

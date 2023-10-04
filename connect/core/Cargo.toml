@@ -1,5 +1,5 @@
 [package]
-name = "soupbintcp_model"
+name = "soupbintcp_connect_core"
 version.workspace = true
 authors.workspace = true
 readme.workspace = true
@@ -10,18 +10,24 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
-description = "Data model bindings for soupbintcp exchange protocol"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-byteserde = { workspace = true }
-byteserde_derive = { workspace = true }
-byteserde_types = { workspace = true }
-derive_more = { workspace = true }
+soupbintcp_model = { workspace = true }
 
-# [dev-dependencies]
+links_nonblocking = { workspace = true }
+
+byteserde = { workspace = true }
+
+bytes = { workspace = true }
+
+
 log = { workspace = true, optional = true }
 env_logger = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }
+
+[dev-dependencies]
+soupbintcp_model = { workspace = true , features = ["unittest"] }
 
 [features]
 default = []

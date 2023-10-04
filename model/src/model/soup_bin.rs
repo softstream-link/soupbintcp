@@ -1,4 +1,3 @@
-use byteserde::prelude::*;
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
 
 use derive_more::TryInto;
@@ -11,13 +10,16 @@ use super::unsequenced_data::UPayload;
 pub const MAX_FRAME_SIZE_SOUPBIN_EXC_PAYLOAD_DEBUG: usize = 54;
 
 #[rustfmt::skip]
+
+
+#[rustfmt::skip]
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, fmt::Debug, TryInto)]
 #[byteserde(peek(2, 1))]
-pub enum SBCltMsg<CltPayload: ByteSerializeStack + ByteDeserializeSlice<CltPayload> + ByteSerializedLenOf + PartialEq + Clone + fmt::Debug> {
+pub enum CltSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
     #[byteserde(eq(PacketTypeUnsequencedData::as_slice()))]
-    U(UPayload::<CltPayload>),
+    U(UPayload::<P>),
     #[byteserde(eq(PacketTypeSequencedData::as_slice()))]
-    S(SPayload::<CltPayload>),
+    S(SPayload::<P>),
     #[byteserde(eq(PacketTypeCltHeartbeat::as_slice()))]
     HBeat(CltHeartbeat),
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
@@ -27,25 +29,26 @@ pub enum SBCltMsg<CltPayload: ByteSerializeStack + ByteDeserializeSlice<CltPaylo
     #[byteserde(eq(PacketTypeLogoutRequest::as_slice()))]
     Logout(LogoutRequest),
 }
+
 #[rustfmt::skip]
-impl<CltPayload: ByteSerializeStack + ByteDeserializeSlice<CltPayload> + ByteSerializedLenOf + PartialEq + Clone + fmt::Debug> SBCltMsg<CltPayload> {
+impl<P: SoupBinTcpPayload<P>> CltSoupBinTcpMsg<P> {
     pub fn login(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, hbeat_timeout_ms: TimeoutMs) -> Self { 
         Self::Login( LoginRequest::new(username, password, session_id, sequence_number, hbeat_timeout_ms)) 
     }
-    pub fn logout() -> Self { SBCltMsg::Logout(LogoutRequest::default()) }
-    pub fn hbeat() -> Self { SBCltMsg::HBeat(CltHeartbeat::default()) }
-    pub fn dbg(text: &[u8]) -> Self { SBCltMsg::Dbg(Debug::new(text)) }
-    pub fn sdata(payload: CltPayload) -> Self { SBCltMsg::S(SPayload::new(payload)) }
-    pub fn udata(payload: CltPayload) -> Self { SBCltMsg::U(UPayload::new(payload)) }
+    pub fn logout() -> Self { CltSoupBinTcpMsg::Logout(LogoutRequest::default()) }
+    pub fn hbeat() -> Self { CltSoupBinTcpMsg::HBeat(CltHeartbeat::default()) }
+    pub fn dbg(text: &[u8]) -> Self { CltSoupBinTcpMsg::Dbg(Debug::new(text)) }
+    pub fn sdata(payload: P) -> Self { CltSoupBinTcpMsg::S(SPayload::new(payload)) }
+    pub fn udata(payload: P) -> Self { CltSoupBinTcpMsg::U(UPayload::new(payload)) }
 }
 #[rustfmt::skip]
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, fmt::Debug, TryInto)]
 #[byteserde(peek(2, 1))]
-pub enum SBSvcMsg<SvcPayload: ByteSerializeStack + ByteDeserializeSlice<SvcPayload> + ByteSerializedLenOf + PartialEq + Clone + fmt::Debug>{
+pub enum SvcSoupBinTcpMsg<P: SoupBinTcpPayload<P>>{
     #[byteserde(eq(PacketTypeUnsequencedData::as_slice()))]
-    U(UPayload::<SvcPayload>),
+    U(UPayload::<P>),
     #[byteserde(eq(PacketTypeSequencedData::as_slice()))]
-    S(SPayload::<SvcPayload>),
+    S(SPayload::<P>),
     #[byteserde(eq(PacketTypeSvcHeartbeat::as_slice()))]
     HBeat(SvcHeartbeat),
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
@@ -58,65 +61,71 @@ pub enum SBSvcMsg<SvcPayload: ByteSerializeStack + ByteDeserializeSlice<SvcPaylo
     LoginRej(LoginRejected),
 }
 #[rustfmt::skip]
-impl<SvcPayload: ByteSerializeStack + ByteDeserializeSlice<SvcPayload> + ByteSerializedLenOf + PartialEq + Clone + fmt::Debug> SBSvcMsg<SvcPayload> {
+impl<P: SoupBinTcpPayload<P>> SvcSoupBinTcpMsg<P> {
     pub fn end() -> Self { Self::End(EndOfSession::default()) }
     pub fn login_acc(session_id: SessionId, sequence_number: SequenceNumber) -> Self { Self::LoginAcc(LoginAccepted::new(session_id, sequence_number)) }
     pub fn login_rej_not_auth() -> Self { Self::LoginRej(LoginRejected::not_authorized()) }
     pub fn login_rej_ses_not_avail() -> Self { Self::LoginRej(LoginRejected::session_not_available()) }
     pub fn hbeat() -> Self { Self::HBeat(SvcHeartbeat::default()) }
     pub fn dbg(text: &[u8]) -> Self { Self::Dbg(Debug::new(text)) }
-    pub fn sdata(payload: SvcPayload) -> Self { Self::S(SPayload::new(payload)) }
-    pub fn udata(payload: SvcPayload) -> Self { Self::U(UPayload::new(payload)) }
+    pub fn sdata(payload: P) -> Self { Self::S(SPayload::new(payload)) }
+    pub fn udata(payload: P) -> Self { Self::U(UPayload::new(payload)) }
 }
 
 #[derive(Debug, Clone, PartialEq, TryInto)]
-pub enum SBMsg<CltPayload, SvcPayload>
+pub enum SBMsg<CltP, SvcP>
 where
-    CltPayload: ByteSerializeStack+ByteDeserializeSlice<CltPayload>+ByteSerializedLenOf+PartialEq+Clone+fmt::Debug,
-    SvcPayload: ByteSerializeStack+ByteDeserializeSlice<SvcPayload>+ByteSerializedLenOf+PartialEq+Clone+fmt::Debug,
+    CltP: SoupBinTcpPayload<CltP>,
+    SvcP: SoupBinTcpPayload<SvcP>,
 {
-    Clt(SBCltMsg<CltPayload>),
-    Svc(SBSvcMsg<SvcPayload>),
+    Clt(CltSoupBinTcpMsg<CltP>),
+    Svc(SvcSoupBinTcpMsg<SvcP>),
 }
-impl<CltPayload, SvcPayload> SBMsg<CltPayload, SvcPayload>
+impl<CltP, SvcP> SBMsg<CltP, SvcP>
 where
-    CltPayload: ByteSerializeStack+ByteDeserializeSlice<CltPayload>+ByteSerializedLenOf+PartialEq+Clone+fmt::Debug,
-    SvcPayload: ByteSerializeStack+ByteDeserializeSlice<SvcPayload>+ByteSerializedLenOf+PartialEq+Clone+fmt::Debug,
+    CltP: SoupBinTcpPayload<CltP>,
+    SvcP: SoupBinTcpPayload<SvcP>,
 {
-    pub fn unwrap_clt_u(&self) -> &CltPayload{
+    pub fn unwrap_clt_u(&self) -> &CltP {
         match self {
-            SBMsg::Clt(SBCltMsg::U(UPayload{body, ..})) => body,
-            _ => panic!("SoupBinTcp message is not Clt and/or UPayload, instead it is: {:?}", self),
+            SBMsg::Clt(CltSoupBinTcpMsg::U(UPayload { body, .. })) => body,
+            _ => panic!(
+                "SoupBinTcp message is not Clt and/or UPayload, instead it is: {:?}",
+                self
+            ),
         }
     }
-    pub fn unwrap_svc_u(&self) -> &SvcPayload{
+    pub fn unwrap_svc_u(&self) -> &SvcP {
         match self {
-            SBMsg::Svc(SBSvcMsg::U(UPayload{body, ..})) => body,
-            _ => panic!("SoupBinTcp message is not Svc and/or UPayload, instead it is: {:?}", self),
+            SBMsg::Svc(SvcSoupBinTcpMsg::U(UPayload { body, .. })) => body,
+            _ => panic!(
+                "SoupBinTcp message is not Svc and/or UPayload, instead it is: {:?}",
+                self
+            ),
         }
     }
 }
-impl<CltPayload, SvcPayload> From<SBCltMsg<CltPayload>> for SBMsg<CltPayload, SvcPayload>
+impl<CltP, SvcP> From<CltSoupBinTcpMsg<CltP>> for SBMsg<CltP, SvcP>
 where
-    CltPayload: ByteSerializeStack+ByteDeserializeSlice<CltPayload>+ByteSerializedLenOf+PartialEq+Clone+fmt::Debug,
-    SvcPayload: ByteSerializeStack+ByteDeserializeSlice<SvcPayload>+ByteSerializedLenOf+PartialEq+Clone+fmt::Debug,
+    CltP: SoupBinTcpPayload<CltP>,
+    SvcP: SoupBinTcpPayload<SvcP>,
 {
-    fn from(value: SBCltMsg<CltPayload>) -> Self {
+    fn from(value: CltSoupBinTcpMsg<CltP>) -> Self {
         SBMsg::Clt(value)
     }
 }
-impl<CltPayload, SvcPayload> From<SBSvcMsg<SvcPayload>> for SBMsg<CltPayload, SvcPayload>
+impl<CltP, SvcP> From<SvcSoupBinTcpMsg<SvcP>> for SBMsg<CltP, SvcP>
 where
-    CltPayload: ByteSerializeStack+ByteDeserializeSlice<CltPayload>+ByteSerializedLenOf+PartialEq+Clone+fmt::Debug,
-    SvcPayload: ByteSerializeStack+ByteDeserializeSlice<SvcPayload>+ByteSerializedLenOf+PartialEq+Clone+fmt::Debug,
+    CltP: SoupBinTcpPayload<CltP>,
+    SvcP: SoupBinTcpPayload<SvcP>,
 {
-    fn from(value: SBSvcMsg<SvcPayload>) -> Self {
+    fn from(value: SvcSoupBinTcpMsg<SvcP>) -> Self {
         SBMsg::Svc(value)
     }
 }
 
 #[cfg(test)]
-#[cfg(feature="unittest")]
+#[cfg(feature = "unittest")]
 mod test {
 
     use log::info;
@@ -141,7 +150,7 @@ mod test {
         let mut des = ByteDeserializerSlice::new(ser.as_slice());
         let mut msg_out = vec![];
         while !des.is_empty() {
-            let msg = SBCltMsg::<SamplePayload>::byte_deserialize(&mut des).unwrap();
+            let msg = CltSoupBinTcpMsg::<SamplePayload>::byte_deserialize(&mut des).unwrap();
             info!("msg_out: {:?}", msg);
             msg_out.push(msg);
         }
@@ -162,7 +171,7 @@ mod test {
         let mut des = ByteDeserializerSlice::new(ser.as_slice());
         let mut msg_out = vec![];
         while !des.is_empty() {
-            let msg = SBSvcMsg::<SamplePayload>::byte_deserialize(&mut des).unwrap();
+            let msg = SvcSoupBinTcpMsg::<SamplePayload>::byte_deserialize(&mut des).unwrap();
             info!("msg_out: {:?}", msg);
             msg_out.push(msg);
         }

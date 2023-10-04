@@ -1,5 +1,5 @@
 [workspace]
-members = ["model"]
+members = ["model", "connect/core"]
 
 resolver = "2"
 
@@ -21,6 +21,11 @@ byteserde_derive = { version = "0.4.0" }
 byteserde_types = { version = "0.4.0" }
 derive_more = "0.99"                     # try_into, etc
 
+soupbintcp_model = { path = "./model" }
+
+links_nonblocking = { path = "../links/nonblocking" }
+
+bytes = { version = "1.5" }
 
 # logging
 log = { version = "0.4" }
