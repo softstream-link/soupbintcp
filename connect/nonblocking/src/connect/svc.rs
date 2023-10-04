@@ -23,7 +23,7 @@ mod test {
             addr,
             DevNullCallback::<SvcSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
             NonZeroUsize::new(1).unwrap(),
-            Some("soupbin/unittest"),
+            Some("soupbintcp/unittest"),
         )
         .unwrap();
         info!("svc: {}", svc);
@@ -33,7 +33,7 @@ mod test {
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
             DevNullCallback::<CltSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
-            Some("soupbin/unittest"),
+            Some("soupbintcp/unittest"),
         )
         .unwrap();
         info!("clt: {}", clt);

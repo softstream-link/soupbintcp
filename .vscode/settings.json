@@ -5,6 +5,15 @@
     "cSpell.words": [
         "hbeat",
         "sdata",
-        "udata"
+        "udata",
+        "soupbintcp",
+        "byteserde",
+        "nonblocking",
+        "busywait",
+        "rustfmt",
+        "unsequenced",
+        "ouch",
+        "nextest",
+        "clippy",
     ]
 }

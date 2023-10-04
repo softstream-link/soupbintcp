@@ -21,7 +21,7 @@ mod test {
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
             DevNullCallback::<CltSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
-            Some("soupbin/unittest"),
+            Some("soupbintcp/unittest"),
         );
         info!("{:?} not connected", res);
         assert!(res.is_err());
