@@ -1,10 +1,7 @@
 use std::{fmt::Debug, io::Error, marker::PhantomData};
 
+use crate::prelude::*;
 use byteserde::prelude::{from_slice, to_bytes_stack};
-use links_nonblocking::prelude::{Framer, Messenger};
-use soupbintcp_model::prelude::{CltSoupBinTcpMsg, SoupBinTcpPayload, SvcSoupBinTcpMsg};
-
-use super::framer::SoupBinTcpFramer;
 
 #[rustfmt::skip]
 
@@ -12,18 +9,22 @@ use super::framer::SoupBinTcpFramer;
 ///  * Divides [bytes::BytesMut] into frames and deserializes into a [SBSvcMsg] type
 ///  * Takes [SBCltMsg] type and serializes into byte array 
 #[derive(Debug)]
-pub struct CltSoupBinTcpMessenger<P: SoupBinTcpPayload<P>> {
-    phantom: PhantomData<P>,
+pub struct CltSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
+    phantom: PhantomData<(RecvP, SendP)>,
 }
-impl<P: SoupBinTcpPayload<P>> Framer for CltSoupBinTcpMessenger<P> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer
+    for CltSoupBinTcpMessenger<RecvP, SendP>
+{
     #[inline(always)]
     fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
-impl<P: SoupBinTcpPayload<P>> Messenger for CltSoupBinTcpMessenger<P> {
-    type RecvT = SvcSoupBinTcpMsg<P>;
-    type SendT = CltSoupBinTcpMsg<P>;
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
+    for CltSoupBinTcpMessenger<RecvP, SendP>
+{
+    type RecvT = SvcSoupBinTcpMsg<RecvP>;
+    type SendT = CltSoupBinTcpMsg<SendP>;
 
     #[inline(always)]
     fn serialize<const MAX_MSG_SIZE: usize>(
@@ -48,18 +49,23 @@ impl<P: SoupBinTcpPayload<P>> Messenger for CltSoupBinTcpMessenger<P> {
 ///  * Divides [bytes::BytesMut] into frames and deserializes into a [SBCltcMsg] type
 ///  * Takes [SBSvcMsg] type and serializes into byte array
 #[derive(Debug)]
-pub struct SvcSoupBinTcpMessenger<P: SoupBinTcpPayload<P>> {
-    phantom: PhantomData<P>,
+pub struct SvcSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>>
+{
+    phantom: PhantomData<(RecvP, SendP)>,
 }
-impl<P: SoupBinTcpPayload<P>> Framer for SvcSoupBinTcpMessenger<P> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer
+    for SvcSoupBinTcpMessenger<RecvP, SendP>
+{
     #[inline(always)]
     fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
-impl<P: SoupBinTcpPayload<P>> Messenger for SvcSoupBinTcpMessenger<P> {
-    type RecvT = CltSoupBinTcpMsg<P>;
-    type SendT = SvcSoupBinTcpMsg<P>;
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
+    for SvcSoupBinTcpMessenger<RecvP, SendP>
+{
+    type RecvT = CltSoupBinTcpMsg<RecvP>;
+    type SendT = SvcSoupBinTcpMsg<RecvP>;
 
     #[inline(always)]
     fn serialize<const MAX_MSG_SIZE: usize>(
@@ -84,26 +90,29 @@ impl<P: SoupBinTcpPayload<P>> Messenger for SvcSoupBinTcpMessenger<P> {
 #[cfg(feature = "unittest")]
 mod test {
 
-    use super::*;
+    use crate::prelude::*;
     use bytes::{BufMut, BytesMut};
     use byteserde::prelude::*;
     use log::info;
 
-    use soupbintcp_model::unittest::setup;
-    use soupbintcp_model::{
-        prelude::*,
-        unittest::setup::model::{clt_msgs_default, svc_msgs_default},
+    use soupbintcp_model::unittest::setup::{
+        self,
+        model::{clt_msgs_default, svc_msgs_default},
     };
+    
 
+    type CltMessenger = CltSoupBinTcpMessenger<SamplePayload, SamplePayload>;
+    type SvcMessenger = SvcSoupBinTcpMessenger<SamplePayload, SamplePayload>;
     #[test]
     fn test_soup_bin_clt_send_messenger() {
         setup::log::configure();
+
         const CAP: usize = 1024;
         let mut ser = ByteSerializerStack::<CAP>::default();
         let msg_inp = clt_msgs_default();
         for msg in msg_inp.iter() {
             info!("msg_inp {:?}", msg);
-            let (buf, size) = CltSoupBinTcpMessenger::serialize::<CAP>(msg).unwrap();
+            let (buf, size) = CltMessenger::serialize::<CAP>(msg).unwrap();
             ser.serialize_bytes_slice(&buf[..size]).unwrap();
         }
         info!("ser: {:#x}", ser);
@@ -111,12 +120,12 @@ mod test {
         let mut bytes = BytesMut::with_capacity(CAP);
         bytes.put_slice(ser.as_slice());
 
-        let mut msg_out: Vec<CltSoupBinTcpMsg<SamplePayload>> = vec![];
+        let mut msg_out: Vec<CltSoupBinTcpMsg<_>> = vec![];
         loop {
-            let frame = SvcSoupBinTcpMessenger::<SamplePayload>::get_frame(&mut bytes);
+            let frame = SvcMessenger::get_frame(&mut bytes);
             match frame {
                 Some(frame) => {
-                    let msg = SvcSoupBinTcpMessenger::deserialize(&frame[..]).unwrap();
+                    let msg = SvcMessenger::deserialize(&frame[..]).unwrap();
                     info!("msg_out {:?}", msg);
                     msg_out.push(msg);
                 }
@@ -125,6 +134,7 @@ mod test {
         }
         assert_eq!(msg_inp, msg_out);
     }
+
     #[test]
     fn test_soup_bin_svc_send_messenger() {
         setup::log::configure();
@@ -133,7 +143,7 @@ mod test {
         let msg_inp = svc_msgs_default();
         for msg in msg_inp.iter() {
             info!("msg_inp {:?}", msg);
-            let (buf, size) = SvcSoupBinTcpMessenger::serialize::<CAP>(msg).unwrap();
+            let (buf, size) = SvcMessenger::serialize::<CAP>(msg).unwrap();
             ser.serialize_bytes_slice(&buf[..size]).unwrap();
         }
         info!("ser: {:#x}", ser);
@@ -141,12 +151,12 @@ mod test {
         let mut bytes = BytesMut::with_capacity(CAP);
         bytes.put_slice(ser.as_slice());
 
-        let mut msg_out: Vec<SvcSoupBinTcpMsg<SamplePayload>> = vec![];
+        let mut msg_out: Vec<SvcSoupBinTcpMsg<_>> = vec![];
         loop {
-            let frame = CltSoupBinTcpMessenger::<SamplePayload>::get_frame(&mut bytes);
+            let frame = CltMessenger::get_frame(&mut bytes);
             match frame {
                 Some(frame) => {
-                    let msg = CltSoupBinTcpMessenger::deserialize(&frame[..]).unwrap();
+                    let msg = CltMessenger::deserialize(&frame[..]).unwrap();
                     info!("msg_out {:?}", msg);
                     msg_out.push(msg);
                 }

@@ -1,0 +1,40 @@
+[package]
+name = "soupbintcp_connect_nonblocking"
+version.workspace = true
+authors.workspace = true
+readme.workspace = true
+license-file.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+soupbintcp_connect_core = { workspace = true }
+
+byteserde = { workspace = true }
+
+bytes = { workspace = true }
+
+
+log = { workspace = true, optional = true }
+env_logger = { workspace = true, optional = true }
+colored = { workspace = true, optional = true }
+
+[dev-dependencies]
+
+soupbintcp_model = { workspace = true, features = [
+    "unittest",
+] } # includes sample data models
+
+links_core = { workspace = true, features = [
+    "unittest",
+] } # includes network related methods for setting up unit tests
+
+[features]
+default = []
+full = ["unittest"]
+unittest = ["dep:log", "dep:env_logger", "dep:colored"]

@@ -1,5 +1,5 @@
+use crate::prelude::*;
 use bytes::BytesMut;
-use links_nonblocking::prelude::{Framer, PacketLengthU16Framer};
 
 pub struct SoupBinTcpFramer;
 
@@ -8,58 +8,19 @@ impl Framer for SoupBinTcpFramer {
     fn get_frame_length(bytes: &mut BytesMut) -> Option<usize> {
         PacketLengthU16Framer::<0, true, true>::get_frame_length(bytes)
     }
-    // fn get_frame(bytes: &mut BytesMut) -> Option<Bytes> {
-    //     // ensures there is at least 2 bytes to represent packet_length
-    //     if bytes.len() < 2 {
-    //         return None;
-    //     }
-
-    //     // access packet length with out advancing the cursor, below is a take of the bytes::Buf::get_u16() method
-    //     let packet_length = {
-    //         const SIZE: usize = std::mem::size_of::<u16>();
-    //         // try to convert directly from the bytes
-    //         // this Option<ret> trick is to avoid keeping a borrow on self
-    //         // when advance() is called (mut borrow) and to call bytes() only once
-    //         let ret = bytes
-    //             // .chunk()
-    //             .get(..SIZE)
-    //             .map(|src| unsafe { u16::from_be_bytes(*(src as *const _ as *const [_; SIZE])) });
-
-    //         if let Some(ret) = ret {
-    //             ret
-    //         } else {
-    //             // if not we copy the bytes in a temp buffer then convert
-    //             let mut buf = [0_u8; SIZE];
-    //             let packet_length = &bytes[..SIZE];
-    //             buf[0] = packet_length[0];
-    //             buf[1] = packet_length[1];
-    //             u16::from_be_bytes(buf)
-    //         }
-    //     };
-
-    //     // ensure that there is a full frame available in the buffer
-    //     let frame_length = (packet_length + 2) as usize;
-    //     if bytes.len() < frame_length {
-    //         None
-    //     } else {
-    //         let frame = bytes.split_to(frame_length);
-    //         Some(frame.freeze())
-    //     }
-    // }
 }
 
 #[cfg(test)]
 #[cfg(feature = "unittest")]
 mod test {
-    use super::*;
+    use crate::prelude::*;
     use bytes::{BufMut, BytesMut};
     use byteserde::prelude::*;
     use log::info;
 
-    use soupbintcp_model::unittest::setup;
-    use soupbintcp_model::{
-        prelude::*,
-        unittest::setup::model::{clt_msgs_default, svc_msgs_default},
+    use soupbintcp_model::unittest::setup::{
+        self,
+        model::{clt_msgs_default, svc_msgs_default},
     };
 
     #[test]

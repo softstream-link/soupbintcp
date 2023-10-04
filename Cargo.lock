@@ -419,6 +419,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "soupbintcp_connect_nonblocking"
+version = "4.1.0"
+dependencies = [
+ "bytes",
+ "byteserde",
+ "colored",
+ "env_logger",
+ "links_core",
+ "log",
+ "soupbintcp_connect_core",
+ "soupbintcp_model",
+]
+
+[[package]]
 name = "soupbintcp_model"
 version = "4.1.0"
 dependencies = [
