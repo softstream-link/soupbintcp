@@ -7,7 +7,7 @@ use std::fmt;
 
 use super::unsequenced_data::UPayload;
 
-pub const MAX_FRAME_SIZE_SOUPBINTCP_EXC_PAYLOAD_DEBUG: usize = 54;
+pub const SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG: usize = 54;
 
 #[rustfmt::skip]
 
@@ -31,13 +31,19 @@ pub enum CltSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
 }
 #[rustfmt::skip]
 impl<P: SoupBinTcpPayload<P>> CltSoupBinTcpMsg<P> {
+    #[inline(always)]
     pub fn login(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, hbeat_timeout_ms: TimeoutMs) -> Self { 
         Self::Login( LoginRequest::new(username, password, session_id, sequence_number, hbeat_timeout_ms)) 
     }
+    #[inline(always)]
     pub fn logout() -> Self { CltSoupBinTcpMsg::Logout(LogoutRequest::default()) }
+    #[inline(always)]
     pub fn hbeat() -> Self { CltSoupBinTcpMsg::HBeat(CltHeartbeat::default()) }
+    #[inline(always)]
     pub fn dbg(text: &[u8]) -> Self { CltSoupBinTcpMsg::Dbg(Debug::new(text)) }
+    #[inline(always)]
     pub fn sdata(payload: P) -> Self { CltSoupBinTcpMsg::S(SPayload::new(payload)) }
+    #[inline(always)]
     pub fn udata(payload: P) -> Self { CltSoupBinTcpMsg::U(UPayload::new(payload)) }
 }
 #[rustfmt::skip]
@@ -201,7 +207,7 @@ mod test {
         info!("max_frame_size_no_payload: {}", max_frame_size_no_payload);
         assert_eq!(
             max_frame_size_no_payload,
-            MAX_FRAME_SIZE_SOUPBINTCP_EXC_PAYLOAD_DEBUG
+            SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG
         )
     }
 }

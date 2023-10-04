@@ -9,7 +9,7 @@ mod test {
 
     use std::num::NonZeroUsize;
 
-    use crate::{connect::svc::SvcSoupBinTcp, prelude::*};
+    use crate::prelude::*;
     use links_core::unittest::setup;
     use log::info;
 
@@ -21,7 +21,7 @@ mod test {
 
         let mut svc = SvcSoupBinTcp::<_, _, 128>::bind(
             addr,
-            DevNullCallback::<SvcSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
+            LoggerCallback::<SvcSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
             NonZeroUsize::new(1).unwrap(),
             Some("soupbintcp/unittest"),
         )
@@ -32,7 +32,7 @@ mod test {
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
-            DevNullCallback::<CltSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
+            LoggerCallback::<CltSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
             Some("soupbintcp/unittest"),
         )
         .unwrap();
@@ -41,19 +41,18 @@ mod test {
         svc.pool_accept_busywait_timeout(setup::net::default_connect_timeout())
             .unwrap()
             .unwrap();
+        info!("svc: {}", svc);
 
         let mut clt_msg = CltSoupBinTcpMsg::Login(LoginRequest::default());
         clt.send_busywait_timeout(&mut clt_msg, setup::net::default_connect_timeout())
             .unwrap()
             .unwrap();
 
-        info!("clt_msg: {:?}", clt_msg);
-
         let svc_msg = svc
             .recv_busywait_timeout(setup::net::default_connect_timeout())
             .unwrap()
             .unwrap();
 
-        info!("svc_msg: {:?}", svc_msg);
+        assert_eq!(clt_msg, svc_msg);
     }
 }
