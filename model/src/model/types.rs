@@ -1,5 +1,5 @@
-pub use field_types::*;
-pub use packet_types::*;
+pub use soupbintcp_field_types::*;
+pub use soupbintcp_packet_types::*;
 
 use byteserde::prelude::*;
 use byteserde_derive::{
@@ -7,7 +7,7 @@ use byteserde_derive::{
 };
 
 #[rustfmt::skip]
-pub mod packet_types{
+pub mod soupbintcp_packet_types{
     use super::*;
     use byteserde_types::const_char_ascii;
     const_char_ascii!(PacketTypeCltHeartbeat, b'R', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
@@ -23,7 +23,7 @@ pub mod packet_types{
 }
 
 #[rustfmt::skip]
-pub mod field_types{
+pub mod soupbintcp_field_types{
     use super::*;
     use byteserde_types::{string_ascii_fixed, char_ascii};
 
@@ -86,5 +86,5 @@ pub mod field_types{
     string_ascii_fixed!(UserName, 6, b' ', true, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
     string_ascii_fixed!(Password, 10, b' ', true, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
     
-    char_ascii!(RejectReason, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
+    char_ascii!(LoginRejectReason, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
 }

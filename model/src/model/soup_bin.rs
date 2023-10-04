@@ -7,7 +7,7 @@ use std::fmt;
 
 use super::unsequenced_data::UPayload;
 
-pub const MAX_FRAME_SIZE_SOUPBIN_EXC_PAYLOAD_DEBUG: usize = 54;
+pub const MAX_FRAME_SIZE_SOUPBINTCP_EXC_PAYLOAD_DEBUG: usize = 54;
 
 #[rustfmt::skip]
 
@@ -29,7 +29,6 @@ pub enum CltSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
     #[byteserde(eq(PacketTypeLogoutRequest::as_slice()))]
     Logout(LogoutRequest),
 }
-
 #[rustfmt::skip]
 impl<P: SoupBinTcpPayload<P>> CltSoupBinTcpMsg<P> {
     pub fn login(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, hbeat_timeout_ms: TimeoutMs) -> Self { 
@@ -73,7 +72,7 @@ impl<P: SoupBinTcpPayload<P>> SvcSoupBinTcpMsg<P> {
 }
 
 #[derive(Debug, Clone, PartialEq, TryInto)]
-pub enum SBMsg<CltP, SvcP>
+pub enum SoupBinTcpMsg<CltP, SvcP>
 where
     CltP: SoupBinTcpPayload<CltP>,
     SvcP: SoupBinTcpPayload<SvcP>,
@@ -81,14 +80,14 @@ where
     Clt(CltSoupBinTcpMsg<CltP>),
     Svc(SvcSoupBinTcpMsg<SvcP>),
 }
-impl<CltP, SvcP> SBMsg<CltP, SvcP>
+impl<CltP, SvcP> SoupBinTcpMsg<CltP, SvcP>
 where
     CltP: SoupBinTcpPayload<CltP>,
     SvcP: SoupBinTcpPayload<SvcP>,
 {
     pub fn unwrap_clt_u(&self) -> &CltP {
         match self {
-            SBMsg::Clt(CltSoupBinTcpMsg::U(UPayload { body, .. })) => body,
+            SoupBinTcpMsg::Clt(CltSoupBinTcpMsg::U(UPayload { body, .. })) => body,
             _ => panic!(
                 "SoupBinTcp message is not Clt and/or UPayload, instead it is: {:?}",
                 self
@@ -97,7 +96,7 @@ where
     }
     pub fn unwrap_svc_u(&self) -> &SvcP {
         match self {
-            SBMsg::Svc(SvcSoupBinTcpMsg::U(UPayload { body, .. })) => body,
+            SoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::U(UPayload { body, .. })) => body,
             _ => panic!(
                 "SoupBinTcp message is not Svc and/or UPayload, instead it is: {:?}",
                 self
@@ -105,22 +104,22 @@ where
         }
     }
 }
-impl<CltP, SvcP> From<CltSoupBinTcpMsg<CltP>> for SBMsg<CltP, SvcP>
+impl<CltP, SvcP> From<CltSoupBinTcpMsg<CltP>> for SoupBinTcpMsg<CltP, SvcP>
 where
     CltP: SoupBinTcpPayload<CltP>,
     SvcP: SoupBinTcpPayload<SvcP>,
 {
     fn from(value: CltSoupBinTcpMsg<CltP>) -> Self {
-        SBMsg::Clt(value)
+        SoupBinTcpMsg::Clt(value)
     }
 }
-impl<CltP, SvcP> From<SvcSoupBinTcpMsg<SvcP>> for SBMsg<CltP, SvcP>
+impl<CltP, SvcP> From<SvcSoupBinTcpMsg<SvcP>> for SoupBinTcpMsg<CltP, SvcP>
 where
     CltP: SoupBinTcpPayload<CltP>,
     SvcP: SoupBinTcpPayload<SvcP>,
 {
     fn from(value: SvcSoupBinTcpMsg<SvcP>) -> Self {
-        SBMsg::Svc(value)
+        SoupBinTcpMsg::Svc(value)
     }
 }
 
@@ -202,7 +201,7 @@ mod test {
         info!("max_frame_size_no_payload: {}", max_frame_size_no_payload);
         assert_eq!(
             max_frame_size_no_payload,
-            MAX_FRAME_SIZE_SOUPBIN_EXC_PAYLOAD_DEBUG
+            MAX_FRAME_SIZE_SOUPBINTCP_EXC_PAYLOAD_DEBUG
         )
     }
 }

@@ -2,7 +2,7 @@ use std::fmt::{Debug, Display};
 
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
 
-use crate::model::types::{PacketTypeLoginRejected, RejectReason};
+use crate::model::types::{PacketTypeLoginRejected, LoginRejectReason};
 
 pub const LOGIN_REJECTED_PACKET_LENGTH: u16 = 2;
 pub const LOGIN_REJECTED_BYTE_LEN: usize = LOGIN_REJECTED_PACKET_LENGTH as usize + 2;
@@ -13,21 +13,21 @@ pub const LOGIN_REJECTED_BYTE_LEN: usize = LOGIN_REJECTED_PACKET_LENGTH as usize
 pub struct LoginRejected {
     packet_length: u16,
     packet_type: PacketTypeLoginRejected,
-    reject_reason_code: RejectReason,
+    reject_reason_code: LoginRejectReason,
 }
 impl LoginRejected {
     pub fn not_authorized() -> Self {
         LoginRejected {
             packet_length: LOGIN_REJECTED_PACKET_LENGTH,
             packet_type: Default::default(),
-            reject_reason_code: RejectReason::new(b'A'),
+            reject_reason_code: LoginRejectReason::new(b'A'),
         }
     }
     pub fn session_not_available() -> Self {
         LoginRejected {
             packet_length: LOGIN_REJECTED_PACKET_LENGTH,
             packet_type: Default::default(),
-            reject_reason_code: RejectReason::new(b'S'),
+            reject_reason_code: LoginRejectReason::new(b'S'),
         }
     }
     pub fn is_not_authorized(&self) -> bool {
@@ -40,9 +40,9 @@ impl LoginRejected {
 
 impl Display for LoginRejected {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let msg = if self.reject_reason_code == RejectReason::new(b'A') {
+        let msg = if self.reject_reason_code == LoginRejectReason::new(b'A') {
             "Not Authorized. Invalid username or password in the LoginRequest"
-        } else if self.reject_reason_code == RejectReason::new(b'S') {
+        } else if self.reject_reason_code == LoginRejectReason::new(b'S') {
             "Session Not Available. Te requested session in the LoginRequest was not valid or not available"
         } else {
             "Unknown"
