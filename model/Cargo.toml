@@ -26,4 +26,8 @@ colored = { workspace = true, optional = true }
 [features]
 default = []
 full = ["unittest"]
-unittest = ["dep:log", "dep:env_logger", "dep:colored"]
+unittest = [
+    "dep:log",
+    "dep:env_logger",
+    "dep:colored",
+] # these are optional instead of dev-dependencies because unittest package is exported to connect crait 

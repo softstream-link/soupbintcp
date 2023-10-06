@@ -65,7 +65,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
     for SvcSoupBinTcpMessenger<RecvP, SendP>
 {
     type RecvT = CltSoupBinTcpMsg<RecvP>;
-    type SendT = SvcSoupBinTcpMsg<RecvP>;
+    type SendT = SvcSoupBinTcpMsg<SendP>;
 
     #[inline(always)]
     fn serialize<const MAX_MSG_SIZE: usize>(

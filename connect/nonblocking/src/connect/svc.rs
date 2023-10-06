@@ -3,8 +3,6 @@ use crate::prelude::*;
 pub type SvcSoupBinTcp<M, C, const MAX_MSG_SIZE: usize> = Svc<M, C, MAX_MSG_SIZE>;
 
 #[cfg(test)]
-#[cfg(feature = "unittest")]
-
 mod test {
 
     use std::num::NonZeroUsize;
