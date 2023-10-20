@@ -48,18 +48,18 @@ where
     }
 }
 
-impl Default for UPayload<Nil>{
+impl Default for UPayload<Nil> {
     fn default() -> Self {
         UPayload::new(Nil)
     }
 }
 
 #[cfg(test)]
-#[cfg(feature="unittest")]
+#[cfg(feature = "unittest")]
 mod test {
     use super::*;
     use crate::model::sample_payload::SamplePayload;
-    use crate::unittest::setup;
+    use links_core::unittest::setup;
     use log::info;
 
     #[test]

@@ -95,11 +95,8 @@ mod test {
     use byteserde::prelude::*;
     use log::info;
 
-    use soupbintcp_model::unittest::setup::{
-        self,
-        model::{clt_msgs_default, svc_msgs_default},
-    };
-    
+    use links_core::unittest::setup;
+    use soupbintcp_model::unittest::setup::model::{clt_msgs_default, svc_msgs_default};
 
     type CltMessenger = CltSoupBinTcpMessenger<SamplePayload, SamplePayload>;
     type SvcMessenger = SvcSoupBinTcpMessenger<SamplePayload, SamplePayload>;

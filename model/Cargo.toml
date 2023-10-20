@@ -18,16 +18,13 @@ byteserde_derive = { workspace = true }
 byteserde_types = { workspace = true }
 derive_more = { workspace = true }
 
-# [dev-dependencies]
-log = { workspace = true, optional = true }
-env_logger = { workspace = true, optional = true }
-colored = { workspace = true, optional = true }
+[dev-dependencies]
+log = { workspace = true }
+env_logger = { workspace = true }
+colored = { workspace = true }
+links_core = { workspace = true , features = ["unittest"] }
 
 [features]
 default = []
 full = ["unittest"]
-unittest = [
-    "dep:log",
-    "dep:env_logger",
-    "dep:colored",
-] # these are optional instead of dev-dependencies because unittest package is exported to connect crait 
+unittest = []

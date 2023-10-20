@@ -12,6 +12,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "android-tzdata"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e999941b234f3131b00bc13c22d06e8c5ff726d1b6318ac7eb276997bbb4fef0"
+
+[[package]]
+name = "android_system_properties"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "819e7219dbd41043ac279b19830f2efc897156490d7fd6ea916720117ee66311"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -30,6 +45,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4682ae6287fcf752ecaabbfcc7b6f9b72aa33933dc23a554d853aea8eea8635"
 
 [[package]]
+name = "bumpalo"
+version = "3.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f30e7476521f6f8af1a1c4c0b8cc94f0bee37d91763d0ca2665f299b6cd8aec"
+
+[[package]]
 name = "bytes"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -38,10 +59,25 @@ checksum = "a2bd12c1caf447e69cd4528f47f94d203fd2582878ecb9e9465484c4148a8223"
 [[package]]
 name = "byteserde"
 version = "0.4.0"
+dependencies = [
+ "bytes",
+]
+
+[[package]]
+name = "byteserde"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d769296b41a9817a4e676d2e539d265229ef20258950e7cac5cd889110533965"
 dependencies = [
  "bytes",
+]
+
+[[package]]
+name = "byteserde_derive"
+version = "0.4.0"
+dependencies = [
+ "quote",
+ "syn 2.0.37",
 ]
 
 [[package]]
@@ -57,11 +93,19 @@ dependencies = [
 [[package]]
 name = "byteserde_types"
 version = "0.4.0"
+dependencies = [
+ "byteserde 0.4.0",
+ "byteserde_derive 0.4.0",
+]
+
+[[package]]
+name = "byteserde_types"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35db57f69091b217cbc758f262d6b50027e3564aafde3bfc5dbfdbebb0b44ad8"
 dependencies = [
- "byteserde",
- "byteserde_derive",
+ "byteserde 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteserde_derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -80,6 +124,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chrono"
+version = "0.4.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
+dependencies = [
+ "android-tzdata",
+ "iana-time-zone",
+ "js-sys",
+ "num-traits",
+ "wasm-bindgen",
+ "windows-targets",
+]
+
+[[package]]
 name = "colored"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -95,6 +153,12 @@ name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
+
+[[package]]
+name = "core-foundation-sys"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e496a50fda8aacccc86d7529e2c1e0892dbd0f898a6b5645b5561b89c3210efa"
 
 [[package]]
 name = "derive_more"
@@ -167,6 +231,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
+name = "iana-time-zone"
+version = "0.1.58"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8326b86b6cff230b97d0d312a6c40a60726df3332e721f72a1b035f451663b20"
+dependencies = [
+ "android_system_properties",
+ "core-foundation-sys",
+ "iana-time-zone-haiku",
+ "js-sys",
+ "wasm-bindgen",
+ "windows-core",
+]
+
+[[package]]
+name = "iana-time-zone-haiku"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "is-terminal"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -182,6 +269,15 @@ name = "itoa"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af150ab688ff2122fcef229be89cb50dd66af9e01a4ff320cc137eecc9bacc38"
+
+[[package]]
+name = "js-sys"
+version = "0.3.64"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5f195fe497f702db0f318b07fdd68edb16955aed830df8363d837542f8f935a"
+dependencies = [
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "lazy_static"
@@ -200,9 +296,10 @@ name = "links_core"
 version = "0.1.0"
 dependencies = [
  "bytes",
- "byteserde",
- "byteserde_derive",
- "byteserde_types",
+ "byteserde 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteserde_derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteserde_types 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono",
  "colored",
  "env_logger",
  "log",
@@ -216,7 +313,7 @@ name = "links_nonblocking"
 version = "0.1.0"
 dependencies = [
  "bytes",
- "byteserde",
+ "byteserde 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "links_core",
  "log",
  "mio",
@@ -284,6 +381,21 @@ dependencies = [
  "arrayvec",
  "itoa",
 ]
+
+[[package]]
+name = "num-traits"
+version = "0.2.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39e3200413f237f41ab11ad6d161bc7239c84dcb631773ccd7de3dfe4b5c267c"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
+name = "once_cell"
+version = "1.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "ppv-lite86"
@@ -410,9 +522,10 @@ name = "soupbintcp_connect_core"
 version = "4.1.0"
 dependencies = [
  "bytes",
- "byteserde",
+ "byteserde 0.4.0",
  "colored",
  "env_logger",
+ "links_core",
  "links_nonblocking",
  "log",
  "soupbintcp_model",
@@ -423,7 +536,7 @@ name = "soupbintcp_connect_nonblocking"
 version = "4.1.0"
 dependencies = [
  "bytes",
- "byteserde",
+ "byteserde 0.4.0",
  "colored",
  "env_logger",
  "links_core",
@@ -436,12 +549,13 @@ dependencies = [
 name = "soupbintcp_model"
 version = "4.1.0"
 dependencies = [
- "byteserde",
- "byteserde_derive",
- "byteserde_types",
+ "byteserde 0.4.0",
+ "byteserde_derive 0.4.0",
+ "byteserde_types 0.4.0",
  "colored",
  "derive_more",
  "env_logger",
+ "links_core",
  "log",
 ]
 
@@ -489,6 +603,60 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
+name = "wasm-bindgen"
+version = "0.2.87"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7706a72ab36d8cb1f80ffbf0e071533974a60d0a308d01a5d0375bf60499a342"
+dependencies = [
+ "cfg-if",
+ "wasm-bindgen-macro",
+]
+
+[[package]]
+name = "wasm-bindgen-backend"
+version = "0.2.87"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ef2b6d3c510e9625e5fe6f509ab07d66a760f0885d858736483c32ed7809abd"
+dependencies = [
+ "bumpalo",
+ "log",
+ "once_cell",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.37",
+ "wasm-bindgen-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-macro"
+version = "0.2.87"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dee495e55982a3bd48105a7b947fd2a9b4a8ae3010041b9e0faab3f9cd028f1d"
+dependencies = [
+ "quote",
+ "wasm-bindgen-macro-support",
+]
+
+[[package]]
+name = "wasm-bindgen-macro-support"
+version = "0.2.87"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54681b18a46765f095758388f2d0cf16eb8d4169b639ab575a8f5693af210c7b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.37",
+ "wasm-bindgen-backend",
+ "wasm-bindgen-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-shared"
+version = "0.2.87"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca6ad05a4870b2bf5fe995117d3728437bd27d7cd5f06f13c17443ef369775a1"
+
+[[package]]
 name = "winapi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -518,6 +686,15 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "windows-core"
+version = "0.51.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1f8cf84f35d2db49a46868f947758c7a1138116f7fac3bc844f43ade1292e64"
+dependencies = [
+ "windows-targets",
+]
 
 [[package]]
 name = "windows-sys"

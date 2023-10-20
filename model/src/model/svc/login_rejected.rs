@@ -2,7 +2,7 @@ use std::fmt::{Debug, Display};
 
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
 
-use crate::model::types::{PacketTypeLoginRejected, LoginRejectReason};
+use crate::model::types::{LoginRejectReason, PacketTypeLoginRejected};
 
 pub const LOGIN_REJECTED_PACKET_LENGTH: u16 = 2;
 pub const LOGIN_REJECTED_BYTE_LEN: usize = LOGIN_REJECTED_PACKET_LENGTH as usize + 2;
@@ -52,11 +52,11 @@ impl Display for LoginRejected {
 }
 
 #[cfg(test)]
-#[cfg(feature="unittest")]
+#[cfg(feature = "unittest")]
 mod test {
     use super::*;
     use byteserde::prelude::*;
-    use crate::unittest::setup;
+    use links_core::unittest::setup;
     use log::info;
 
     #[test]

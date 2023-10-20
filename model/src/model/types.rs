@@ -68,7 +68,7 @@ pub mod soupbintcp_field_types{
     #[cfg(feature="unittest")]
     mod test{
         use log::info;
-        use crate::unittest::setup;
+        use links_core::unittest::setup;
         use super::TimeoutMs;
 
         #[test]

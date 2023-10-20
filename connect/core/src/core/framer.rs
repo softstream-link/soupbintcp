@@ -18,10 +18,8 @@ mod test {
     use byteserde::prelude::*;
     use log::info;
 
-    use soupbintcp_model::unittest::setup::{
-        self,
-        model::{clt_msgs_default, svc_msgs_default},
-    };
+    use soupbintcp_model::unittest::setup::model::{clt_msgs_default, svc_msgs_default};
+    use links_core::unittest::setup;
 
     #[test]
     fn test_soup_bin_clt_framing() {

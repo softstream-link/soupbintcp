@@ -5,7 +5,9 @@ use std::fmt;
 
 use super::types::PacketTypeDebug;
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, fmt::Debug)]
+#[derive(
+    ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, fmt::Debug,
+)]
 #[byteserde(endian = "be")]
 pub struct Debug {
     #[byteserde(replace( packet_type.byte_len() + text.byte_len() ))]
@@ -41,10 +43,10 @@ impl fmt::Display for Debug {
 }
 
 #[cfg(test)]
-#[cfg(feature="unittest")]
+#[cfg(feature = "unittest")]
 mod test {
     use super::*;
-    use crate::unittest::setup;
+    use links_core::unittest::setup;
     use log::info;
 
     #[test]

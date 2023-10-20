@@ -33,7 +33,7 @@ impl Display for SvcHeartbeat {
 mod test {
     use super::*;
     use byteserde::prelude::*;
-    use crate::unittest::setup;
+    use links_core::unittest::setup;
     use log::info;
 
     #[test]

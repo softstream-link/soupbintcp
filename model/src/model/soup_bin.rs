@@ -138,7 +138,7 @@ mod test {
     use crate::{prelude::*, unittest::setup::model::*};
     use byteserde::prelude::*;
 
-    use crate::unittest::setup;
+    use links_core::unittest::setup;
 
     #[test]
     fn test_soup_bin_clt() {

@@ -28,6 +28,7 @@ colored = { workspace = true, optional = true }
 
 [dev-dependencies]
 soupbintcp_model = { workspace = true , features = ["unittest"] }
+links_core = { workspace = true , features = ["unittest"] }
 
 [features]
 default = []
