@@ -1,3 +1,4 @@
+pub mod experiment;
 pub mod setup {
     pub mod model {
         use crate::prelude::*;

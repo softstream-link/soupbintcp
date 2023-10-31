@@ -2,24 +2,21 @@ pub use soupbintcp_field_types::*;
 pub use soupbintcp_packet_types::*;
 
 use byteserde::prelude::*;
-use byteserde_derive::{
-    ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf, ByteSerializedSizeOf,
-};
+use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf, ByteSerializedSizeOf};
 
-#[rustfmt::skip]
-pub mod soupbintcp_packet_types{
+pub mod soupbintcp_packet_types {
     use super::*;
     use byteserde_types::const_char_ascii;
-    const_char_ascii!(PacketTypeCltHeartbeat, b'R', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeSvcHeartbeat, b'H', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeDebug, b'+', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeEndOfSession, b'Z', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeLoginAccepted, b'A', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeLoginRejected, b'J', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeLoginRequest, b'L', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeLogoutRequest, b'O', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeSequencedData, b'S', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    const_char_ascii!(PacketTypeUnsequencedData, b'U', ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
+    const_char_ascii!(PacketTypeCltHeartbeat, b'R', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeSvcHeartbeat, b'H', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeDebug, b'+', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeEndOfSession, b'Z', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeLoginAccepted, b'A', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeLoginRejected, b'J', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeLoginRequest, b'L', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeLogoutRequest, b'O', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeSequencedData, b'S', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    const_char_ascii!(PacketTypeUnsequencedData, b'U', derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
 }
 
 #[rustfmt::skip]
@@ -27,7 +24,7 @@ pub mod soupbintcp_field_types{
     use super::*;
     use byteserde_types::{string_ascii_fixed, char_ascii};
 
-    string_ascii_fixed!(SessionId, 10, b' ', true, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
+    string_ascii_fixed!(SessionId, 10, b' ', true, derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
     impl Default for SessionId{
         fn default() -> Self {
             // all banks to log into the currently active session
@@ -36,7 +33,7 @@ pub mod soupbintcp_field_types{
     }
 
     // TODO add docs https://stackoverflow.com/questions/33999341/generating-documentation-in-macros
-    string_ascii_fixed!(SequenceNumber, 20, b' ', true, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
+    string_ascii_fixed!(SequenceNumber, 20, b' ', true, derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
     impl From<u64> for SequenceNumber{ fn from(v: u64) -> Self { v.to_string().as_bytes().into()} }
     impl Default for SequenceNumber{
         fn default() -> Self {
@@ -45,7 +42,7 @@ pub mod soupbintcp_field_types{
         }
     }
 
-    string_ascii_fixed!(TimeoutMs, 5, b' ', true, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
+    string_ascii_fixed!(TimeoutMs, 5, b' ', true, derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
     impl From<u16> for TimeoutMs{ fn from(v: u16) -> Self { v.to_string().as_bytes().into() } }
     impl From<TimeoutMs> for u16 {
         fn from(v: TimeoutMs) -> Self {
@@ -83,8 +80,8 @@ pub mod soupbintcp_field_types{
             assert_eq!(millis_u16, 1000);
         }
     }
-    string_ascii_fixed!(UserName, 6, b' ', true, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
-    string_ascii_fixed!(Password, 10, b' ', true, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
+    string_ascii_fixed!(UserName, 6, b' ', true, derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
+    string_ascii_fixed!(Password, 10, b' ', true, derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
     
-    char_ascii!(LoginRejectReason, ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy);
+    char_ascii!(LoginRejectReason, derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
 }

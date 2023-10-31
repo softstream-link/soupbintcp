@@ -37,7 +37,7 @@ mod test {
     use log::info;
 
     #[test]
-    fn test_server_heartbeat() {
+    fn test_svc_heartbeat() {
         setup::log::configure();
 
         let msg_inp = SvcHeartbeat::default();
