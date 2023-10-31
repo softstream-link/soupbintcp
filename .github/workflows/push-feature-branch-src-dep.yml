@@ -17,7 +17,7 @@ jobs:
         with:
           repository: 'softstream-link/byteserde'
           ref: 'performance_v5'  # TODO change branch
-          path: links
+          path: byteserde
       - name: Check out links/ouch
         uses: actions/checkout@v3 
         with:
