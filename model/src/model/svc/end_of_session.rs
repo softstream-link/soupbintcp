@@ -1,14 +1,17 @@
+use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use byteserde_derive::{ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf};
 
 use crate::model::types::PacketTypeEndOfSession;
 
 pub const END_OF_SESSION_PACKET_LENGTH: u16 = 1;
 pub const END_OF_SESSION_BYTE_LEN: usize = END_OF_SESSION_PACKET_LENGTH as usize + 2;
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
 pub struct EndOfSession {
+    #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
+    #[serde(default)]
     packet_type: PacketTypeEndOfSession,
 }
 impl Default for EndOfSession {
@@ -24,18 +27,21 @@ impl Display for EndOfSession {
         write!(f, "End of Session")
     }
 }
+fn default_packet_length() -> u16 {
+    END_OF_SESSION_PACKET_LENGTH
+}
 
 #[cfg(test)]
-#[cfg(feature="unittest")]
 mod test {
     use super::*;
-    use links_core::unittest::setup;
     use byteserde::prelude::*;
+    use links_core::unittest::setup;
     use log::info;
+    use serde_json::{to_string, from_str};
 
     #[test]
-    fn test_end_of_session() {
-        setup::log::configure();
+    fn test_end_of_session_byteserde() {
+        setup::log::configure_compact();
 
         let msg_inp = EndOfSession::default();
         info!("msg_inp: {}", msg_inp);
@@ -48,5 +54,26 @@ mod test {
         let msg_out: EndOfSession = from_serializer_stack(&ser).unwrap();
         info!("msg_out:? {:?}", msg_out);
         assert_eq!(msg_out, msg_inp);
+    }
+
+    #[test]
+    fn test_end_of_session_serde() {
+        setup::log::configure_compact();
+
+        let msg_inp = EndOfSession::default();
+        info!("msg_inp:? {:?}", msg_inp);
+
+        let json_out = to_string(&msg_inp).unwrap();
+        info!("json_out: {}", json_out);
+        assert_eq!(r#"{"packet_type":"Z"}"#, json_out);
+
+        // acceptable alternatives
+        for (i, pass_json) in vec![r#" {  "packetType": "Z" } "#, r#" { } "#].iter().enumerate() {
+            info!("=========== {} ===========", i + 1);
+            info!("pass_json: {}", pass_json);
+            let msg_out: EndOfSession = from_str(pass_json).unwrap();
+            info!("msg_out:? {:?}", msg_out);
+            assert_eq!(msg_inp, msg_out);
+        }
     }
 }

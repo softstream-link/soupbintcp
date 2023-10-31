@@ -33,7 +33,6 @@ fn default_packet_length() -> u16 {
 }
 
 #[cfg(test)]
-#[cfg(feature = "unittest")]
 mod test {
     use super::*;
     use byteserde::prelude::*;
@@ -70,7 +69,7 @@ mod test {
         assert_eq!(r#"{"packet_type":"R"}"#, json_out);
 
         // acceptable alternatives
-        for (i, pass_json) in vec![r#" {  "packetType": "R" } "#, r#" { } "#].iter().enumerate() {
+        for (i, pass_json) in vec![r#" {  "packet_type": "R" } "#, r#" { } "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: CltHeartbeat = from_str(pass_json).unwrap();

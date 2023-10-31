@@ -33,7 +33,6 @@ fn default_packet_length() -> u16 {
 }
 
 #[cfg(test)]
-#[cfg(feature = "unittest")]
 mod test {
     use super::*;
     use byteserde::prelude::*;

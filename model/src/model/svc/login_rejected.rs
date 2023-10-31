@@ -1,48 +1,69 @@
-use std::fmt::{Debug, Display};
-
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt::{Debug, Display};
 
 use crate::model::types::{LoginRejectReason, PacketTypeLoginRejected};
 
 pub const LOGIN_REJECTED_PACKET_LENGTH: u16 = 2;
 pub const LOGIN_REJECTED_BYTE_LEN: usize = LOGIN_REJECTED_PACKET_LENGTH as usize + 2;
-#[derive(
-    ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, Debug,
-)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
 pub struct LoginRejected {
+    #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
+    #[serde(default)]
     packet_type: PacketTypeLoginRejected,
-    reject_reason_code: LoginRejectReason,
+    #[serde(serialize_with = "LoginRejected::reason_ser", deserialize_with = "LoginRejected::reason_des")]
+    reason: LoginRejectReason,
 }
 impl LoginRejected {
     pub fn not_authorized() -> Self {
         LoginRejected {
             packet_length: LOGIN_REJECTED_PACKET_LENGTH,
             packet_type: Default::default(),
-            reject_reason_code: LoginRejectReason::new(b'A'),
+            reason: LoginRejectReason::not_authorized(),
         }
     }
     pub fn session_not_available() -> Self {
         LoginRejected {
             packet_length: LOGIN_REJECTED_PACKET_LENGTH,
             packet_type: Default::default(),
-            reject_reason_code: LoginRejectReason::new(b'S'),
+            reason: LoginRejectReason::session_not_available(),
         }
     }
+    #[inline(always)]
     pub fn is_not_authorized(&self) -> bool {
-        self.reject_reason_code == LoginRejected::not_authorized().reject_reason_code
+        self.reason.is_not_authorized()
     }
+    #[inline(always)]
     pub fn is_session_not_available(&self) -> bool {
-        self.reject_reason_code == LoginRejected::session_not_available().reject_reason_code
+        self.reason.is_session_not_available()
+    }
+    fn reason_ser<S>(value: &LoginRejectReason, s: S) -> Result<S::Ok, S::Error>
+    where S: Serializer {
+        if value.is_not_authorized() {
+            return s.serialize_str("NOT_AUTHORIZED");
+        } else if value.is_session_not_available() {
+            return s.serialize_str("SESSION_NOT_AVAILABLE");
+        } else {
+            return s.serialize_str("UNKNOWN");
+        }
+    }
+    fn reason_des<'de, D>(d: D) -> Result<LoginRejectReason, D::Error>
+    where D: Deserializer<'de> {
+        let value = String::deserialize(d)?;
+        match value.as_str() {
+            "NOT_AUTHORIZED" | "A" => Ok(LoginRejectReason::not_authorized()),
+            "SESSION_NOT_AVAILABLE" | "S" => Ok(LoginRejectReason::session_not_available()),
+            _ => Ok(LoginRejectReason::new(value.as_bytes()[0])),
+        }
     }
 }
-
 impl Display for LoginRejected {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let msg = if self.reject_reason_code == LoginRejectReason::new(b'A') {
+        let msg = if self.reason == LoginRejectReason::new(b'A') {
             "Not Authorized. Invalid username or password in the LoginRequest"
-        } else if self.reject_reason_code == LoginRejectReason::new(b'S') {
+        } else if self.reason == LoginRejectReason::new(b'S') {
             "Session Not Available. Te requested session in the LoginRequest was not valid or not available"
         } else {
             "Unknown"
@@ -50,18 +71,21 @@ impl Display for LoginRejected {
         write!(f, "Login Rejected reason \"{}\"", msg)
     }
 }
+fn default_packet_length() -> u16 {
+    LOGIN_REJECTED_PACKET_LENGTH
+}
 
 #[cfg(test)]
-#[cfg(feature = "unittest")]
 mod test {
     use super::*;
     use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
+    use serde_json::{from_str, to_string};
 
     #[test]
-    fn test_login_rejected() {
-        setup::log::configure();
+    fn test_login_rejected_byteserde() {
+        setup::log::configure_compact();
 
         let msg_inp = LoginRejected::not_authorized();
         info!("msg_inp: {}", msg_inp);
@@ -80,5 +104,39 @@ mod test {
         let msg_out: LoginRejected = from_serializer_stack(&ser).unwrap();
         info!("msg_out:? {:?}", msg_out);
         assert_eq!(msg_out, msg_inp);
+    }
+
+    #[test]
+    fn test_login_rejected_serde() {
+        setup::log::configure_compact();
+        let msg_inp = LoginRejected::not_authorized();
+        info!("msg_inp:? {:?}", msg_inp);
+
+        let json_out = to_string(&msg_inp).unwrap();
+        info!("json_out: {}", json_out);
+        assert_eq!(r#"{"packet_type":"J","reason":"NOT_AUTHORIZED"}"#, json_out);
+
+        let msg_inp = LoginRejected::session_not_available();
+        info!("msg_inp:? {:?}", msg_inp);
+
+        let json_out = to_string(&msg_inp).unwrap();
+        info!("json_out: {}", json_out);
+        assert_eq!(r#"{"packet_type":"J","reason":"SESSION_NOT_AVAILABLE"}"#, json_out);
+
+        // acceptable alternatives
+        for (i, pass_json) in vec![
+            r#" { "packet_type": "J", "reason":"SESSION_NOT_AVAILABLE" } "#,
+            r#" { "packet_type": "J", "reason":"S" } "#,
+            r#" { "reason":"S" } "#,
+        ]
+        .iter()
+        .enumerate()
+        {
+            info!("=========== {} ===========", i + 1);
+            info!("pass_json: {}", pass_json);
+            let msg_out: LoginRejected = from_str(pass_json).unwrap();
+            info!("msg_out:? {:?}", msg_out);
+            assert_eq!(msg_inp, msg_out);
+        }
     }
 }

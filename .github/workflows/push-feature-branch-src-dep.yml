@@ -1,4 +1,4 @@
-name: Feature Branch Build On Stable With Links Src
+name: Feature Branch Build On Stable With Src Dependencies ( links, byteserde )
 on:
   push:
      branches:
@@ -12,8 +12,13 @@ jobs:
         uses: actions/checkout@v3 
         with:
           path: soupbintcp
-      
-      - name: Check out links
+      - name: Check out byteserde/performance_v5
+        uses: actions/checkout@v3 
+        with:
+          repository: 'softstream-link/byteserde'
+          ref: 'performance_v5'  # TODO change branch
+          path: links
+      - name: Check out links/ouch
         uses: actions/checkout@v3 
         with:
           repository: 'softstream-link/links'

@@ -1,17 +1,14 @@
-use byteserde_derive::{
-    ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf, ByteSerializedSizeOf,
-};
+use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf, ByteSerializedSizeOf};
 use byteserde_types::string_ascii_fixed;
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::{SoupBinTcpPayload, UPayload};
 
-#[rustfmt::skip]
 string_ascii_fixed!(Context1, 10, b' ', true, derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
-#[rustfmt::skip]
 string_ascii_fixed!(Context2, 10, b' ', true, derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy));
 
 #[rustfmt::skip]
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct SamplePayload {
     pub context1: Context1,
     pub context2: Context2,

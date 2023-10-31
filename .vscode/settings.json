@@ -3,17 +3,18 @@
         "full"
     ],
     "cSpell.words": [
-        "hbeat",
-        "sdata",
-        "udata",
-        "soupbintcp",
-        "byteserde",
-        "nonblocking",
         "busywait",
-        "rustfmt",
-        "unsequenced",
-        "ouch",
-        "nextest",
+        "byteserde",
         "clippy",
+        "hbeat",
+        "nextest",
+        "nonblocking",
+        "ouch",
+        "rustfmt",
+        "sdata",
+        "soupbintcp",
+        "udata",
+        "unsequenced",
+        "worl"
     ]
 }

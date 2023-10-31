@@ -13,21 +13,33 @@ categories.workspace = true
 description = "Data model bindings for soupbintcp exchange protocol"
 
 [dependencies]
+# derives
 byteserde = { workspace = true }
 byteserde_derive = { workspace = true }
 byteserde_types = { workspace = true }
-serde = { workspace = true }
 derive_more = { workspace = true }
+serde = { workspace = true }
 
 [dev-dependencies]
-serde_json = { workspace = true }
+# benchmarking
+criterion = { workspace = true }
 
+# logging
 log = { workspace = true }
 env_logger = { workspace = true }
 colored = { workspace = true }
+
+# testing
 links_core = { workspace = true, features = ["unittest"] }
+serde_json = { workspace = true }
 
 [features]
 default = []
 full = ["unittest"]
 unittest = []       # exists to provide a vector of all possible soubin messages
+
+
+# BENCHMARKS
+[[bench]]
+name = "soupbintcp_model_bench"
+harness = false
