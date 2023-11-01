@@ -40,21 +40,17 @@ impl LoginRejected {
         self.reason.is_session_not_available()
     }
     fn reason_ser<S>(value: &LoginRejectReason, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    where S: Serializer {
         if value.is_not_authorized() {
-            return s.serialize_str("NOT_AUTHORIZED");
+            s.serialize_str("NOT_AUTHORIZED")
         } else if value.is_session_not_available() {
-            return s.serialize_str("SESSION_NOT_AVAILABLE");
+            s.serialize_str("SESSION_NOT_AVAILABLE")
         } else {
-            return s.serialize_str("UNKNOWN");
+            s.serialize_str("UNKNOWN")
         }
     }
     fn reason_des<'de, D>(d: D) -> Result<LoginRejectReason, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
+    where D: Deserializer<'de> {
         let value = String::deserialize(d)?;
         match value.as_str() {
             "NOT_AUTHORIZED" | "A" => Ok(LoginRejectReason::not_authorized()),

@@ -12,24 +12,18 @@ use byteserde::prelude::{from_slice, to_bytes_stack};
 pub struct CltSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     phantom: PhantomData<(RecvP, SendP)>,
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer
-    for CltSoupBinTcpMessenger<RecvP, SendP>
-{
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for CltSoupBinTcpMessenger<RecvP, SendP> {
     #[inline(always)]
     fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
-    for CltSoupBinTcpMessenger<RecvP, SendP>
-{
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for CltSoupBinTcpMessenger<RecvP, SendP> {
     type RecvT = SvcSoupBinTcpMsg<RecvP>;
     type SendT = CltSoupBinTcpMsg<SendP>;
 
     #[inline(always)]
-    fn serialize<const MAX_MSG_SIZE: usize>(
-        msg: &Self::SendT,
-    ) -> Result<([u8; MAX_MSG_SIZE], usize), std::io::Error> {
+    fn serialize<const MAX_MSG_SIZE: usize>(msg: &Self::SendT) -> Result<([u8; MAX_MSG_SIZE], usize), std::io::Error> {
         match to_bytes_stack::<MAX_MSG_SIZE, Self::SendT>(msg) {
             Ok(res) => Ok(res),
             Err(e) => Err(Error::new(std::io::ErrorKind::Other, e)),
@@ -49,28 +43,21 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
 ///  * Divides [bytes::BytesMut] into frames and deserializes into a [CltSoupBinTcpMsg] type
 ///  * Takes [SvcSoupBinTcpMsg] type and serializes into byte array
 #[derive(Debug)]
-pub struct SvcSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>>
-{
+pub struct SvcSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     phantom: PhantomData<(RecvP, SendP)>,
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer
-    for SvcSoupBinTcpMessenger<RecvP, SendP>
-{
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for SvcSoupBinTcpMessenger<RecvP, SendP> {
     #[inline(always)]
     fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
-    for SvcSoupBinTcpMessenger<RecvP, SendP>
-{
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for SvcSoupBinTcpMessenger<RecvP, SendP> {
     type RecvT = CltSoupBinTcpMsg<RecvP>;
     type SendT = SvcSoupBinTcpMsg<SendP>;
 
     #[inline(always)]
-    fn serialize<const MAX_MSG_SIZE: usize>(
-        msg: &Self::SendT,
-    ) -> Result<([u8; MAX_MSG_SIZE], usize), std::io::Error> {
+    fn serialize<const MAX_MSG_SIZE: usize>(msg: &Self::SendT) -> Result<([u8; MAX_MSG_SIZE], usize), std::io::Error> {
         match to_bytes_stack::<MAX_MSG_SIZE, Self::SendT>(msg) {
             Ok(res) => Ok(res),
             Err(e) => Err(Error::new(std::io::ErrorKind::Other, e)),

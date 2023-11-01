@@ -92,19 +92,11 @@ pub mod soupbintcp_field_types {
     impl LoginRejectReason {
         #[inline(always)]
         pub fn is_not_authorized(&self) -> bool {
-            if self.0 == b'A' {
-                true
-            } else {
-                false
-            }
+            self.0 == b'A'
         }
         #[inline(always)]
         pub fn is_session_not_available(&self) -> bool {
-            if self.0 == b'S' {
-                true
-            } else {
-                false
-            }
+            self.0 == b'S'
         }
         #[inline(always)]
         pub fn not_authorized() -> Self {
