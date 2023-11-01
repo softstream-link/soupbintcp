@@ -8,12 +8,12 @@ use super::types::PacketTypeDebug;
 
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, fmt::Debug)]
 #[byteserde(endian = "be")]
-#[serde(try_from = "DebugShadow")]
+#[serde(try_from = "DebugJsonDesShadow")]
 pub struct Debug {
     #[serde(skip)]
     #[byteserde(replace( packet_type.byte_len() + text.byte_len() ))]
     packet_length: u16,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeDebug,
     #[byteserde(deplete ( packet_length as usize - packet_type.byte_len() ))]
     text: StringAscii,
@@ -45,14 +45,14 @@ impl fmt::Display for Debug {
 
 // shadow struct for serde deserialization of Debug, used to setup packet_length field
 #[derive(Deserialize, Debug)]
-struct DebugShadow {
+struct DebugJsonDesShadow {
     #[serde(default)]
     packet_type: PacketTypeDebug,
     text: StringAscii,
 }
-impl TryFrom<DebugShadow> for Debug {
+impl TryFrom<DebugJsonDesShadow> for Debug {
     type Error = std::io::Error;
-    fn try_from(shadow: DebugShadow) -> Result<Self, Self::Error> {
+    fn try_from(shadow: DebugJsonDesShadow) -> Result<Self, Self::Error> {
         Ok(Debug {
             packet_length: (shadow.text.byte_len() + shadow.packet_type.byte_len()) as u16,
             text: shadow.text,
@@ -63,7 +63,8 @@ impl TryFrom<DebugShadow> for Debug {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::prelude::*;
+    use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
     use serde_json::{from_str, to_string};
@@ -97,14 +98,10 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"+","text":"This is a default debug message text"}"#, json_out);
+        assert_eq!(r#"{"text":"This is a default debug message text"}"#, json_out);
 
         // acceptable alternatives
-        for (i , pass_json ) in vec![
-            r#" { "packet_type": "+", "text": "This is a default debug message text" } "#,
-            r#" { "text": "This is a default debug message text" } "#,
-
-        ].iter().enumerate() {
+        for (i, pass_json) in vec![r#" { "text": "This is a default debug message text" } "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: Debug = from_str(pass_json).unwrap();

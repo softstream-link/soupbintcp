@@ -12,7 +12,7 @@ pub const CLIENT_HEARTBEAT_BYTE_LEN: usize = CLIENT_HEARTBEAT_PACKET_LENGTH as u
 pub struct CltHeartbeat {
     #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeCltHeartbeat,
 }
 impl Default for CltHeartbeat {
@@ -34,7 +34,7 @@ fn default_packet_length() -> u16 {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::{model::clt::heartbeat::CLIENT_HEARTBEAT_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
@@ -66,10 +66,10 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"R"}"#, json_out);
+        assert_eq!(r#"{}"#, json_out);
 
         // acceptable alternatives
-        for (i, pass_json) in vec![r#" {  "packet_type": "R" } "#, r#" { } "#].iter().enumerate() {
+        for (i, pass_json) in vec![r#" { } "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: CltHeartbeat = from_str(pass_json).unwrap();

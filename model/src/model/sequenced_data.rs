@@ -1,16 +1,17 @@
-use byteserde::prelude::*;
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use super::types::PacketTypeSequencedData;
+use crate::prelude::{PacketTypeSequencedData, SoupBinTcpPayload};
 
 pub const SEQUENCED_DATA_HEADER_BYTE_LEN: usize = 3;
 
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
 pub struct SPayloadHeader {
+    #[serde(skip)]
     pub packet_length: u16,
+    #[serde(default, skip_serializing)]
     pub packet_type: PacketTypeSequencedData,
 }
 
@@ -23,44 +24,49 @@ impl SPayloadHeader {
         }
     }
 }
-
+/// Sequenced Data Packet
+/// [SOUP TCP/IP Specification](./model/docs/soupbintcp_spec_4.0.pdf)  // TODO - update link to correct path
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
-pub struct SPayload<Payload>
-where Payload: ByteSerializeStack+ByteDeserializeSlice<Payload>+ByteSerializedLenOf+PartialEq+Clone+Debug
-{
-    // header: SPayloadHeader, // TODO benchmark, measure without header on ouch
+#[serde(try_from = "SPayloadJsonDesShadow<Payload>")]
+pub struct SPayload<Payload: SoupBinTcpPayload<Payload>> {
     #[serde(skip)]
-    pub packet_length: u16,
-    pub packet_type: PacketTypeSequencedData,
-    // #[byteserde(deplete ( header.packet_length as usize - 1 ))]
-    #[byteserde(deplete ( packet_length as usize - 1 ))]
+    header: SPayloadHeader,
+    #[byteserde(deplete ( header.packet_length as usize - 1 ))]
+    #[serde(flatten)]
     body: Payload,
 }
-
-impl<Payload: ByteSerializeStack+ByteDeserializeSlice<Payload>+ByteSerializedLenOf+PartialEq+Clone+Debug> SPayload<Payload> {
+impl<Payload: SoupBinTcpPayload<Payload>> SPayload<Payload> {
     pub fn new(body: Payload) -> SPayload<Payload> {
-        // let header = SPayloadHeader::new((body.byte_len() + 1) as u16);
-        // SPayload { header, body }
-        SPayload {
-            packet_length: (body.byte_len() + 1) as u16,
-            packet_type: PacketTypeSequencedData::default(),
-            body,
-        }
+        let header = SPayloadHeader::new((body.byte_len() + 1) as u16);
+        SPayload { header, body }
+    }
+}
+
+// shadow struct for serde deserialization of [SPayload<Payload>], used to setup packet_length field
+#[derive(Deserialize, Debug)]
+struct SPayloadJsonDesShadow<Payload: SoupBinTcpPayload<Payload>>(Payload);
+impl<Payload: SoupBinTcpPayload<Payload>> TryFrom<SPayloadJsonDesShadow<Payload>> for SPayload<Payload> {
+    type Error = std::io::Error;
+    fn try_from(shadow: SPayloadJsonDesShadow<Payload>) -> Result<Self, Self::Error> {
+        Ok(SPayload {
+            header: SPayloadHeader::new((shadow.0.byte_len() + 1) as u16),
+            body: shadow.0,
+        })
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::model::sample_payload::SamplePayload;
+    use crate::{model::sequenced_data::SEQUENCED_DATA_HEADER_BYTE_LEN, prelude::*};
+    use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
-    use serde_json::to_string;
+    use serde_json::{from_str, to_string};
 
     #[test]
     fn test_sequenced_data_header() {
-        setup::log::configure();
+        setup::log::configure_compact();
         let msg_inp = SPayloadHeader::new(10);
         info!("msg_inp:? {:?}", msg_inp);
 
@@ -100,6 +106,19 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"S","body":{"context1":"10 char lo","context2":"hello worl"}}"#, json_out);
+        assert_eq!(r#"{"context1":"10 char lo","context2":"hello worl"}"#, json_out);
+
+        let msg_out: SPayload<SamplePayload> = from_str(&json_out).unwrap();
+        info!("msg_out:? {:?}", msg_out);
+        assert_eq!(msg_out, msg_inp);
+
+        // acceptable alternatives
+        for (i, pass_json) in vec![r#" { "context1": "10 char lo", "context2": "hello worl" } "#].iter().enumerate() {
+            info!("=========== {} ===========", i + 1);
+            info!("pass_json: {}", pass_json);
+            let msg_out: SPayload<SamplePayload> = from_str(pass_json).unwrap();
+            info!("msg_out:? {:?}", msg_out);
+            assert_eq!(msg_out, msg_inp);
+        }
     }
 }

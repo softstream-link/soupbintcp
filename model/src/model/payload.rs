@@ -1,13 +1,16 @@
-use crate::prelude::SoupBinTcpPayload;
+use crate::prelude::{SoupBinTcpPayload, UPayload};
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
 use serde::{Deserialize, Serialize};
 
-#[rustfmt::skip]
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug, Default)]
 pub struct Nil;
+impl Default for UPayload<Nil> {
+    fn default() -> Self {
+        UPayload::new(Nil)
+    }
+}
 impl SoupBinTcpPayload<Nil> for Nil {}
 
-#[rustfmt::skip]
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug, Default)]
 pub struct VecPayload {
     pub payload: Vec<u8>,

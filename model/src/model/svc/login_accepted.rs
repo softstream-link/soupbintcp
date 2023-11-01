@@ -11,7 +11,7 @@ pub const LOGIN_ACCEPTED_BYTE_LEN: usize = LOGIN_ACCEPTED_PACKET_LENGTH as usize
 pub struct LoginAccepted {
     #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeLoginAccepted,
     session_id: SessionId,
     sequence_number: SequenceNumber,
@@ -47,7 +47,7 @@ fn default_packet_length() -> u16 {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::{model::svc::login_accepted::LOGIN_ACCEPTED_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
@@ -77,16 +77,10 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"A","session_id":"session #1","sequence_number":"1"}"#, json_out);
+        assert_eq!(r#"{"session_id":"session #1","sequence_number":"1"}"#, json_out);
 
         // acceptable alternatives
-        for (i, pass_json) in vec![
-            r#" {  "packet_type": "A", "session_id": "session #1", "sequence_number": "1" } "#,
-            r#" {  "session_id": "session #1", "sequence_number": "1" } "#,
-        ]
-        .iter()
-        .enumerate()
-        {
+        for (i, pass_json) in vec![r#" {  "session_id": "session #1", "sequence_number": "1" } "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: LoginAccepted = serde_json::from_str(pass_json).unwrap();

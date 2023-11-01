@@ -1,4 +1,3 @@
-pub mod experiment;
 pub mod setup {
     pub mod model {
         use crate::prelude::*;
@@ -9,13 +8,13 @@ pub mod setup {
             P: SoupBinTcpPayload<P> + Default,
         {
             vec![
-                SvcSoupBinTcpMsg::HBeat(SvcHeartbeat::default()),
+                SvcSoupBinTcpMsg::Hbeat(SvcHeartbeat::default()),
                 SvcSoupBinTcpMsg::Dbg(Debug::default()),
-                SvcSoupBinTcpMsg::LoginAcc(LoginAccepted::default()),
-                SvcSoupBinTcpMsg::LoginRej(LoginRejected::not_authorized()),
-                SvcSoupBinTcpMsg::End(EndOfSession::default()),
-                SvcSoupBinTcpMsg::S(SPayload::new(P::default())),
-                SvcSoupBinTcpMsg::U(UPayload::new(P::default())),
+                SvcSoupBinTcpMsg::LoginAccepted(LoginAccepted::default()),
+                SvcSoupBinTcpMsg::LoginRejected(LoginRejected::not_authorized()),
+                SvcSoupBinTcpMsg::EndOfSession(EndOfSession::default()),
+                SvcSoupBinTcpMsg::SPayload(SPayload::new(P::default())),
+                SvcSoupBinTcpMsg::UPayload(UPayload::new(P::default())),
             ]
         }
 
@@ -25,12 +24,12 @@ pub mod setup {
             P: SoupBinTcpPayload<P> + Default,
         {
             vec![
-                CltSoupBinTcpMsg::HBeat(CltHeartbeat::default()),
+                CltSoupBinTcpMsg::Hbeat(CltHeartbeat::default()),
                 CltSoupBinTcpMsg::Dbg(Debug::default()),
                 CltSoupBinTcpMsg::Login(LoginRequest::default()),
                 CltSoupBinTcpMsg::Logout(LogoutRequest::default()),
-                CltSoupBinTcpMsg::S(SPayload::new(P::default())),
-                CltSoupBinTcpMsg::U(UPayload::new(P::default())),
+                CltSoupBinTcpMsg::SPayload(SPayload::new(P::default())),
+                CltSoupBinTcpMsg::UPayload(UPayload::new(P::default())),
             ]
         }
     }

@@ -11,7 +11,7 @@ pub const LOGIN_REJECTED_BYTE_LEN: usize = LOGIN_REJECTED_PACKET_LENGTH as usize
 pub struct LoginRejected {
     #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeLoginRejected,
     #[serde(serialize_with = "LoginRejected::reason_ser", deserialize_with = "LoginRejected::reason_des")]
     reason: LoginRejectReason,
@@ -40,7 +40,9 @@ impl LoginRejected {
         self.reason.is_session_not_available()
     }
     fn reason_ser<S>(value: &LoginRejectReason, s: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+    where
+        S: Serializer,
+    {
         if value.is_not_authorized() {
             return s.serialize_str("NOT_AUTHORIZED");
         } else if value.is_session_not_available() {
@@ -50,7 +52,9 @@ impl LoginRejected {
         }
     }
     fn reason_des<'de, D>(d: D) -> Result<LoginRejectReason, D::Error>
-    where D: Deserializer<'de> {
+    where
+        D: Deserializer<'de>,
+    {
         let value = String::deserialize(d)?;
         match value.as_str() {
             "NOT_AUTHORIZED" | "A" => Ok(LoginRejectReason::not_authorized()),
@@ -77,7 +81,10 @@ fn default_packet_length() -> u16 {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::{
+        model::svc::login_rejected::{LOGIN_REJECTED_BYTE_LEN, LOGIN_REJECTED_PACKET_LENGTH},
+        prelude::*,
+    };
     use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
@@ -114,24 +121,17 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"J","reason":"NOT_AUTHORIZED"}"#, json_out);
+        assert_eq!(r#"{"reason":"NOT_AUTHORIZED"}"#, json_out);
 
         let msg_inp = LoginRejected::session_not_available();
         info!("msg_inp:? {:?}", msg_inp);
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"J","reason":"SESSION_NOT_AVAILABLE"}"#, json_out);
+        assert_eq!(r#"{"reason":"SESSION_NOT_AVAILABLE"}"#, json_out);
 
         // acceptable alternatives
-        for (i, pass_json) in vec![
-            r#" { "packet_type": "J", "reason":"SESSION_NOT_AVAILABLE" } "#,
-            r#" { "packet_type": "J", "reason":"S" } "#,
-            r#" { "reason":"S" } "#,
-        ]
-        .iter()
-        .enumerate()
-        {
+        for (i, pass_json) in vec![r#" { "reason":"SESSION_NOT_AVAILABLE" } "#, r#" { "reason":"S" } "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: LoginRejected = from_str(pass_json).unwrap();

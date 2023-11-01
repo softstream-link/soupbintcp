@@ -1,4 +1,4 @@
-name: Feature Branch Build On Stable With Src Dependencies ( links, byteserde )
+name: Feature Branch Build On Nightly With Src Dependencies ( links, byteserde )
 on:
   push:
      branches:

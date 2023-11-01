@@ -13,7 +13,7 @@ pub const SERVER_HEARTBEAT_BYTE_LEN: usize = SERVER_HEARTBEAT_PACKET_LENGTH as u
 pub struct SvcHeartbeat {
     #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeSvcHeartbeat,
 }
 
@@ -36,11 +36,11 @@ fn default_packet_length() -> u16 {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::{model::svc::heartbeat::SERVER_HEARTBEAT_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
-    use serde_json::{to_string, from_str};
+    use serde_json::{from_str, to_string};
 
     #[test]
     fn test_svc_heartbeat() {
@@ -67,10 +67,10 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"H"}"#, json_out);
+        assert_eq!(r#"{}"#, json_out);
 
         // acceptable alternatives
-        for (i, pass_json) in vec![r#" {  "packetType": "H" } "#, r#" { } "#].iter().enumerate() {
+        for (i, pass_json) in vec![r#" { } "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: SvcHeartbeat = from_str(pass_json).unwrap();

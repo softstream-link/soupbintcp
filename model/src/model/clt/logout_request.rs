@@ -12,7 +12,7 @@ pub const LOGOUT_REQUEST_BYTE_LEN: usize = LOGOUT_REQUEST_PACKET_LENGTH as usize
 pub struct LogoutRequest {
     #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeLogoutRequest,
 }
 impl Default for LogoutRequest {
@@ -34,11 +34,11 @@ fn default_packet_length() -> u16 {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::{model::clt::logout_request::LOGOUT_REQUEST_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
-    use serde_json::{to_string, from_str};
+    use serde_json::{from_str, to_string};
 
     #[test]
     fn test_logout_request_byteserde() {
@@ -64,16 +64,10 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"O"}"#, json_out);
+        assert_eq!(r#"{}"#, json_out);
 
         // acceptable alternatives
-        for (i, pass_json) in vec![
-            r#" {"packet_type":"O"} "#,
-            r#" {} "#,
-        ]
-        .iter()
-        .enumerate()
-        {
+        for (i, pass_json) in vec![r#" {} "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: LogoutRequest = from_str(&pass_json).unwrap();

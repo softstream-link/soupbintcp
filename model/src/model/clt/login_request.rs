@@ -13,7 +13,7 @@ pub const LOGIN_REQUEST_BYTE_LEN: usize = LOGIN_REQUEST_PACKET_LENGTH as usize +
 pub struct LoginRequest {
     #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeLoginRequest,
 
     pub username: UserName,
@@ -69,7 +69,7 @@ fn default_packet_length() -> u16 {
 }
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::{model::clt::login_request::LOGIN_REQUEST_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
     use log::info;
@@ -104,16 +104,10 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"packet_type":"L","username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"5000"}"#, json_out);
+        assert_eq!(r#"{"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"5000"}"#, json_out);
 
         // acceptable alternatives
-        for (i, pass_json) in vec![
-            r#" {"packet_type":"L","username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"5000"} "#,
-            r#" {"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"5000"} "#,
-        ]
-        .iter()
-        .enumerate()
-        {
+        for (i, pass_json) in vec![r#" {"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"5000"} "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: LoginRequest = from_str(pass_json).unwrap();
