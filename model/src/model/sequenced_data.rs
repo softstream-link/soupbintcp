@@ -28,7 +28,7 @@ impl SPayloadHeader {
 /// [SOUP TCP/IP Specification](./model/docs/soupbintcp_spec_4.0.pdf)  // TODO - update link to correct path
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
-#[serde(try_from = "SPayloadJsonDesShadow<Payload>")]
+#[serde(from = "SPayloadJsonDesShadow<Payload>")]
 pub struct SPayload<Payload: SoupBinTcpPayload<Payload>> {
     #[serde(skip)]
     header: SPayloadHeader,
@@ -44,15 +44,14 @@ impl<Payload: SoupBinTcpPayload<Payload>> SPayload<Payload> {
 }
 
 // shadow struct for serde deserialization of [SPayload<Payload>], used to setup packet_length field
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct SPayloadJsonDesShadow<Payload: SoupBinTcpPayload<Payload>>(Payload);
-impl<Payload: SoupBinTcpPayload<Payload>> TryFrom<SPayloadJsonDesShadow<Payload>> for SPayload<Payload> {
-    type Error = std::io::Error;
-    fn try_from(shadow: SPayloadJsonDesShadow<Payload>) -> Result<Self, Self::Error> {
-        Ok(SPayload {
+impl<Payload: SoupBinTcpPayload<Payload>> From<SPayloadJsonDesShadow<Payload>> for SPayload<Payload> {
+    fn from(shadow: SPayloadJsonDesShadow<Payload>) -> Self {
+        SPayload {
             header: SPayloadHeader::new((shadow.0.byte_len() + 1) as u16),
             body: shadow.0,
-        })
+        }
     }
 }
 

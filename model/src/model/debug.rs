@@ -8,7 +8,7 @@ use super::types::PacketTypeDebug;
 
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, fmt::Debug)]
 #[byteserde(endian = "be")]
-#[serde(try_from = "DebugJsonDesShadow")]
+#[serde(from = "DebugJsonDesShadow")]
 pub struct Debug {
     #[serde(skip)]
     #[byteserde(replace( packet_type.byte_len() + text.byte_len() ))]
@@ -50,14 +50,13 @@ struct DebugJsonDesShadow {
     packet_type: PacketTypeDebug,
     text: StringAscii,
 }
-impl TryFrom<DebugJsonDesShadow> for Debug {
-    type Error = std::io::Error;
-    fn try_from(shadow: DebugJsonDesShadow) -> Result<Self, Self::Error> {
-        Ok(Debug {
+impl From<DebugJsonDesShadow> for Debug {
+    fn from(shadow: DebugJsonDesShadow) -> Self {
+        Debug {
             packet_length: (shadow.text.byte_len() + shadow.packet_type.byte_len()) as u16,
             text: shadow.text,
             packet_type: shadow.packet_type,
-        })
+        }
     }
 }
 

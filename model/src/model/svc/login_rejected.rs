@@ -1,5 +1,5 @@
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 
 use crate::model::types::{LoginRejectReason, PacketTypeLoginRejected};
@@ -13,7 +13,6 @@ pub struct LoginRejected {
     packet_length: u16,
     #[serde(default, skip_serializing)]
     packet_type: PacketTypeLoginRejected,
-    #[serde(serialize_with = "LoginRejected::reason_ser", deserialize_with = "LoginRejected::reason_des")]
     reason: LoginRejectReason,
 }
 impl LoginRejected {
@@ -38,25 +37,6 @@ impl LoginRejected {
     #[inline(always)]
     pub fn is_session_not_available(&self) -> bool {
         self.reason.is_session_not_available()
-    }
-    fn reason_ser<S>(value: &LoginRejectReason, s: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
-        if value.is_not_authorized() {
-            s.serialize_str("NOT_AUTHORIZED")
-        } else if value.is_session_not_available() {
-            s.serialize_str("SESSION_NOT_AVAILABLE")
-        } else {
-            s.serialize_str("UNKNOWN")
-        }
-    }
-    fn reason_des<'de, D>(d: D) -> Result<LoginRejectReason, D::Error>
-    where D: Deserializer<'de> {
-        let value = String::deserialize(d)?;
-        match value.as_str() {
-            "NOT_AUTHORIZED" | "A" => Ok(LoginRejectReason::not_authorized()),
-            "SESSION_NOT_AVAILABLE" | "S" => Ok(LoginRejectReason::session_not_available()),
-            _ => Ok(LoginRejectReason::new(value.as_bytes()[0])),
-        }
     }
 }
 impl Display for LoginRejected {

@@ -20,6 +20,8 @@ byteserde_types = { workspace = true }
 derive_more = { workspace = true }
 serde = { workspace = true }
 
+links_core = { workspace = true } # short_name_type macro
+
 [dev-dependencies]
 # benchmarking
 criterion = { workspace = true }

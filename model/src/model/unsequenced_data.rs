@@ -26,7 +26,7 @@ impl UPayloadHeader {
 
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
-#[serde(try_from = "UPayloadJsonDesShadow<Payload>")]
+#[serde(from = "UPayloadJsonDesShadow<Payload>")]
 pub struct UPayload<Payload: SoupBinTcpPayload<Payload>> {
     #[serde(skip)]
     header: UPayloadHeader,
@@ -45,13 +45,12 @@ impl<Payload: SoupBinTcpPayload<Payload>> UPayload<Payload> {
 // shadow struct for serde deserialization of [UPayload<Payload>], used to setup packet_length field
 #[derive(Deserialize, Debug)]
 struct UPayloadJsonDesShadow<Payload: SoupBinTcpPayload<Payload>>(Payload);
-impl<Payload: SoupBinTcpPayload<Payload>> TryFrom<UPayloadJsonDesShadow<Payload>> for UPayload<Payload> {
-    type Error = std::io::Error;
-    fn try_from(shadow: UPayloadJsonDesShadow<Payload>) -> Result<Self, Self::Error> {
-        Ok(UPayload {
+impl<Payload: SoupBinTcpPayload<Payload>> From<UPayloadJsonDesShadow<Payload>> for UPayload<Payload> {
+    fn from(shadow: UPayloadJsonDesShadow<Payload>) -> Self {
+        UPayload {
             header: UPayloadHeader::new((shadow.0.byte_len() + 1) as u16),
             body: shadow.0,
-        })
+        }
     }
 }
 #[cfg(test)]
