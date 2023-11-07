@@ -28,52 +28,111 @@ pub enum CltSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
 #[rustfmt::skip]
 impl<P: SoupBinTcpPayload<P>> CltSoupBinTcpMsg<P> {
     #[inline(always)]
-    pub fn login(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, hbeat_timeout_ms: TimeoutMs) -> Self { 
-        Self::Login( LoginRequest::new(username, password, session_id, sequence_number, hbeat_timeout_ms)) 
-    }
+    pub fn login(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, hbeat_timeout_ms: TimeoutMs) -> Self { LoginRequest::new(username, password, session_id, sequence_number, hbeat_timeout_ms).into() }
     #[inline(always)]
-    pub fn logout() -> Self { CltSoupBinTcpMsg::Logout(LogoutRequest::default()) }
+    pub fn logout() -> Self { LogoutRequest::default().into() }
     #[inline(always)]
-    pub fn hbeat() -> Self { CltSoupBinTcpMsg::Hbeat(CltHeartbeat::default()) }
+    pub fn hbeat() -> Self { CltHeartbeat::default().into() }
     #[inline(always)]
-    pub fn dbg(text: &[u8]) -> Self { CltSoupBinTcpMsg::Dbg(Debug::new(text)) }
+    pub fn dbg(text: &[u8]) -> Self { Debug::new(text).into() }
     #[inline(always)]
     pub fn sdata(payload: P) -> Self { CltSoupBinTcpMsg::SPayload(SPayload::new(payload)) }
     #[inline(always)]
     pub fn udata(payload: P) -> Self { CltSoupBinTcpMsg::UPayload(UPayload::new(payload)) }
 }
+mod from_clt_msgs{
+    use super::*;
+    impl<P: SoupBinTcpPayload<P>> From<CltHeartbeat> for CltSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: CltHeartbeat) -> Self {
+            CltSoupBinTcpMsg::Hbeat(payload)
+        }
+    }
+    impl<P: SoupBinTcpPayload<P>> From<Debug> for CltSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: Debug) -> Self {
+            CltSoupBinTcpMsg::Dbg(payload)
+        }
+    }
+    impl<P: SoupBinTcpPayload<P>> From<LoginRequest> for CltSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: LoginRequest) -> Self {
+            CltSoupBinTcpMsg::Login(payload)
+        }
+    }
+    impl<P: SoupBinTcpPayload<P>> From<LogoutRequest> for CltSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: LogoutRequest) -> Self {
+            CltSoupBinTcpMsg::Logout(payload)
+        }
+    }
+}
+
 
 #[rustfmt::skip]
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug, TryInto)]
 #[byteserde(peek(2, 1))]
-pub enum SvcSoupBinTcpMsg<P: SoupBinTcpPayload<P>>{
-    #[byteserde(eq(PacketTypeUnsequencedData::as_slice()))]
-    UPayload(UPayload::<P>),
-    #[byteserde(eq(PacketTypeSequencedData::as_slice()))]
-    SPayload(SPayload::<P>),
+pub enum SvcSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
     #[byteserde(eq(PacketTypeSvcHeartbeat::as_slice()))]
     Hbeat(SvcHeartbeat),
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
     Dbg(crate::model::debug::Debug),
-    #[byteserde(eq(PacketTypeEndOfSession::as_slice()))]
-    EndOfSession(EndOfSession),
     #[byteserde(eq(PacketTypeLoginAccepted::as_slice()))]
     LoginAccepted(LoginAccepted),
     #[byteserde(eq(PacketTypeLoginRejected::as_slice()))]
     LoginRejected(LoginRejected),
+    #[byteserde(eq(PacketTypeEndOfSession::as_slice()))]
+    EndOfSession(EndOfSession),
+    #[byteserde(eq(PacketTypeUnsequencedData::as_slice()))]
+    UPayload(UPayload::<P>),
+    #[byteserde(eq(PacketTypeSequencedData::as_slice()))]
+    SPayload(SPayload::<P>),
 }
+
 #[rustfmt::skip]
 impl<P: SoupBinTcpPayload<P>> SvcSoupBinTcpMsg<P> {
-    pub fn end() -> Self { Self::EndOfSession(EndOfSession::default()) }
-    pub fn login_acc(session_id: SessionId, sequence_number: SequenceNumber) -> Self { Self::LoginAccepted(LoginAccepted::new(session_id, sequence_number)) }
-    pub fn login_rej_not_auth() -> Self { Self::LoginRejected(LoginRejected::not_authorized()) }
-    pub fn login_rej_ses_not_avail() -> Self { Self::LoginRejected(LoginRejected::session_not_available()) }
-    pub fn hbeat() -> Self { Self::Hbeat(SvcHeartbeat::default()) }
-    pub fn dbg(text: &[u8]) -> Self { Self::Dbg(Debug::new(text)) }
+    pub fn hbeat() -> Self { SvcHeartbeat::default().into() }
+    pub fn dbg(text: &[u8]) -> Self { Debug::new(text).into() }
+    pub fn login_acc(session_id: SessionId, sequence_number: SequenceNumber) -> Self { LoginAccepted::new(session_id, sequence_number).into() }
+    pub fn login_rej_not_auth() -> Self { LoginRejected::not_authorized().into() }
+    pub fn login_rej_ses_not_avail() -> Self { LoginRejected::session_not_available().into() }
+    pub fn end() -> Self { EndOfSession::default().into() }
     pub fn sdata(payload: P) -> Self { Self::SPayload(SPayload::new(payload)) }
     pub fn udata(payload: P) -> Self { Self::UPayload(UPayload::new(payload)) }
 }
-
+mod from_svc_msgs{
+    use super::*;
+    impl<P: SoupBinTcpPayload<P>> From<SvcHeartbeat> for SvcSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: SvcHeartbeat) -> Self {
+            SvcSoupBinTcpMsg::Hbeat(payload)
+        }
+    }
+    impl<P: SoupBinTcpPayload<P>> From<Debug> for SvcSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: Debug) -> Self {
+            SvcSoupBinTcpMsg::Dbg(payload)
+        }
+    }
+    impl<P: SoupBinTcpPayload<P>> From<LoginAccepted> for SvcSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: LoginAccepted) -> Self {
+            SvcSoupBinTcpMsg::LoginAccepted(payload)
+        }
+    }
+    impl<P: SoupBinTcpPayload<P>> From<LoginRejected> for SvcSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: LoginRejected) -> Self {
+            SvcSoupBinTcpMsg::LoginRejected(payload)
+        }
+    }
+    impl<P: SoupBinTcpPayload<P>> From<EndOfSession> for SvcSoupBinTcpMsg<P> {
+        #[inline(always)]
+        fn from(payload: EndOfSession) -> Self {
+            SvcSoupBinTcpMsg::EndOfSession(payload)
+        }
+    }
+}
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, TryInto)]
 pub enum SoupBinTcpMsg<CltP, SvcP>
 where
