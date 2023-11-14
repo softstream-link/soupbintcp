@@ -3,11 +3,9 @@ use std::{fmt::Debug, io::Error, marker::PhantomData};
 use crate::prelude::*;
 use byteserde::prelude::{from_slice, to_bytes_stack};
 
-#[rustfmt::skip]
-
 /// Performs two tasks
 ///  * Divides [bytes::BytesMut] into frames and deserializes into a [SvcSoupBinTcpMsg] type
-///  * Takes [CltSoupBinTcpMsg] type and serializes into byte array 
+///  * Takes [CltSoupBinTcpMsg] type and serializes into byte array
 #[derive(Debug)]
 pub struct CltSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     phantom: PhantomData<(RecvP, SendP)>,

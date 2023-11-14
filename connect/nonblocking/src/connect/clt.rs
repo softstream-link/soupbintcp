@@ -1,6 +1,8 @@
 use crate::prelude::*;
 
 pub type CltSoupBinTcp<M, C, const MAX_MSG_SIZE: usize> = Clt<M, C, MAX_MSG_SIZE>;
+pub type CltSoupBinTcpRecver<M, C, const MAX_MSG_SIZE: usize> = CltRecver<M, C, MAX_MSG_SIZE>;
+pub type CltSoupBinTcpSender<M, C, const MAX_MSG_SIZE: usize> = CltSender<M, C, MAX_MSG_SIZE>;
 
 #[cfg(test)]
 #[cfg(feature = "unittest")]

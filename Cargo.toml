@@ -16,12 +16,12 @@ categories = ["API bindings"]
 
 
 [workspace.dependencies]
-# byteserde = { version = "0.4.0" }
-# byteserde_derive = { version = "0.4.0" }
-# byteserde_types = { version = "0.4.0" }
-byteserde = { version = "0.4.0", path = "../byteserde/byteserde" }
-byteserde_derive = { version = "0.4.0", path = "../byteserde/byteserde_derive" }
-byteserde_types = { version = "0.4.0", path = "../byteserde/byteserde_types" }
+byteserde = { version = "0.5" }
+byteserde_derive = { version = "0.5" }
+byteserde_types = { version = "0.5" }
+# byteserde = { version = "0.4.0", path = "../byteserde/byteserde" }
+# byteserde_derive = { version = "0.4.0", path = "../byteserde/byteserde_derive" }
+# byteserde_types = { version = "0.4.0", path = "../byteserde/byteserde_types" }
 derive_more = "0.99"                                                             # try_into, etc
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -31,7 +31,7 @@ soupbintcp_model = { path = "./model" }
 soupbintcp_connect_core = { path = "./connect/core" }
 soupbintcp_connect_nonblocking = { path = "./connect/nonblocking" }
 
-links_core = { path = "../links/core" }
+
 links_nonblocking = { path = "../links/nonblocking" }
 
 bytes = { version = "1.5" }
@@ -40,6 +40,9 @@ bytes = { version = "1.5" }
 log = { version = "0.4" }
 env_logger = { version = "0.10" }
 colored = { version = "2.0" }
+
+# testing
+links_core = { path = "../links/core" } # unit tests only
 
 # benches
 criterion = { version = "0.5" }
