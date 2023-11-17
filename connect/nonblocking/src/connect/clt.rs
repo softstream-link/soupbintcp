@@ -1,8 +1,10 @@
 use crate::prelude::*;
 
-pub type CltSoupBinTcp<M, C, const MAX_MSG_SIZE: usize> = Clt<M, C, MAX_MSG_SIZE>;
-pub type CltSoupBinTcpRecver<M, C, const MAX_MSG_SIZE: usize> = CltRecver<M, C, MAX_MSG_SIZE>;
-pub type CltSoupBinTcpSender<M, C, const MAX_MSG_SIZE: usize> = CltSender<M, C, MAX_MSG_SIZE>;
+/// SoupBinTCP client, meant to be used in a single thread, use [CltSoupBinTcpSupervised::into_split]
+pub type CltSoupBinTcpSupervised<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Clt<CltSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
+
+pub type CltSoupBinTcpRecver<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltRecver<CltSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
+pub type CltSoupBinTcpSender<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltSender<CltSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
 
 #[cfg(test)]
 #[cfg(feature = "unittest")]
@@ -18,11 +20,11 @@ mod test {
 
         let addr = setup::net::rand_avail_addr_port();
 
-        let res = CltSoupBinTcp::<_, _, 128>::connect(
+        let res = CltSoupBinTcpSupervised::<Nil, Nil, _, 128>::connect(
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
-            DevNullCallback::<CltSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
+            DevNullCallback::new_ref(),
             Some("soupbintcp/unittest"),
         );
         info!("{:?} not connected", res);

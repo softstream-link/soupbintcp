@@ -12,6 +12,7 @@
         "nonblocking",
         "ouch",
         "Recver",
+        "Recvers",
         "rustfmt",
         "sdata",
         "soupbintcp",

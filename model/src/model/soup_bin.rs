@@ -17,7 +17,7 @@ pub enum CltSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
     #[byteserde(eq(PacketTypeSequencedData::as_slice()))]
     SPayload(SPayload::<P>),
     #[byteserde(eq(PacketTypeCltHeartbeat::as_slice()))]
-    Hbeat(CltHeartbeat),
+    HBeat(CltHeartbeat),
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
     Dbg(crate::model::debug::Debug),
     #[byteserde(eq(PacketTypeLoginRequest::as_slice()))]
@@ -45,7 +45,7 @@ mod from_clt_msgs{
     impl<P: SoupBinTcpPayload<P>> From<CltHeartbeat> for CltSoupBinTcpMsg<P> {
         #[inline(always)]
         fn from(payload: CltHeartbeat) -> Self {
-            CltSoupBinTcpMsg::Hbeat(payload)
+            CltSoupBinTcpMsg::HBeat(payload)
         }
     }
     impl<P: SoupBinTcpPayload<P>> From<Debug> for CltSoupBinTcpMsg<P> {
@@ -74,7 +74,7 @@ mod from_clt_msgs{
 #[byteserde(peek(2, 1))]
 pub enum SvcSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
     #[byteserde(eq(PacketTypeSvcHeartbeat::as_slice()))]
-    Hbeat(SvcHeartbeat),
+    HBeat(SvcHeartbeat),
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
     Dbg(crate::model::debug::Debug),
     #[byteserde(eq(PacketTypeLoginAccepted::as_slice()))]
@@ -105,7 +105,7 @@ mod from_svc_msgs{
     impl<P: SoupBinTcpPayload<P>> From<SvcHeartbeat> for SvcSoupBinTcpMsg<P> {
         #[inline(always)]
         fn from(payload: SvcHeartbeat) -> Self {
-            SvcSoupBinTcpMsg::Hbeat(payload)
+            SvcSoupBinTcpMsg::HBeat(payload)
         }
     }
     impl<P: SoupBinTcpPayload<P>> From<Debug> for SvcSoupBinTcpMsg<P> {

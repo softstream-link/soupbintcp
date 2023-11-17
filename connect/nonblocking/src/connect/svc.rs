@@ -1,7 +1,10 @@
 use crate::prelude::*;
 
-pub type SvcSoupBinTcp<M, C, const MAX_MSG_SIZE: usize> = Svc<M, C, MAX_MSG_SIZE>;
-pub type SvcSoupBinTcpAcceptor<M, C, const MAX_MSG_SIZE: usize> = SvcAcceptor<M, C, MAX_MSG_SIZE>;
+
+pub type SvcSoupBinTcpSupervised<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Svc<SvcSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
+pub type SvcSoupBinTcpAcceptor<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = SvcAcceptor<SvcSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
+pub type SvcSoupBinTcpRecver<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltRecver<SvcSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
+pub type SvcSoupBinTcpSender<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltSender<SvcSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
 
 #[cfg(test)]
 #[cfg(feature = "unittest")]
@@ -19,20 +22,13 @@ mod test {
 
         let addr = setup::net::rand_avail_addr_port();
 
-        let mut svc = SvcSoupBinTcp::<_, _, 128>::bind(addr, LoggerCallback::<SvcSoupBinTcpMessenger<Nil, Nil>>::new_ref(), NonZeroUsize::new(1).unwrap(), Some("soupbintcp/unittest")).unwrap();
+        let mut svc = SvcSoupBinTcpSupervised::<Nil, Nil, _, 128>::bind(addr, LoggerCallback::new_ref(), NonZeroUsize::new(1).unwrap(), Some("soupbintcp/unittest")).unwrap();
         info!("svc: {}", svc);
 
-        let mut clt = CltSoupBinTcp::<_, _, 128>::connect(
-            addr,
-            setup::net::default_connect_timeout(),
-            setup::net::default_connect_retry_after(),
-            LoggerCallback::<CltSoupBinTcpMessenger<Nil, Nil>>::new_ref(),
-            Some("soupbintcp/unittest"),
-        )
-        .unwrap();
+        let mut clt = CltSoupBinTcpSupervised::<Nil, Nil, _, 128>::connect(addr, setup::net::default_connect_timeout(), setup::net::default_connect_retry_after(), LoggerCallback::new_ref(), Some("soupbintcp/unittest")).unwrap();
         info!("clt: {}", clt);
 
-        svc.pool_accept_busywait_timeout(setup::net::default_connect_timeout()).unwrap().unwrap();
+        svc.pool_accept_busywait_timeout(setup::net::default_connect_timeout()).unwrap().unwrap_accepted();
         info!("svc: {}", svc);
 
         let mut clt_msg = CltSoupBinTcpMsg::Login(LoginRequest::default());

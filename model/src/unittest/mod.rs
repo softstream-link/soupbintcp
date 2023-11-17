@@ -8,7 +8,7 @@ pub mod setup {
             P: SoupBinTcpPayload<P> + Default,
         {
             vec![
-                SvcSoupBinTcpMsg::Hbeat(SvcHeartbeat::default()),
+                SvcSoupBinTcpMsg::HBeat(SvcHeartbeat::default()),
                 SvcSoupBinTcpMsg::Dbg(Debug::default()),
                 SvcSoupBinTcpMsg::LoginAccepted(LoginAccepted::default()),
                 SvcSoupBinTcpMsg::LoginRejected(LoginRejected::not_authorized()),
@@ -24,7 +24,7 @@ pub mod setup {
             P: SoupBinTcpPayload<P> + Default,
         {
             vec![
-                CltSoupBinTcpMsg::Hbeat(CltHeartbeat::default()),
+                CltSoupBinTcpMsg::HBeat(CltHeartbeat::default()),
                 CltSoupBinTcpMsg::Dbg(Debug::default()),
                 CltSoupBinTcpMsg::Login(LoginRequest::default()),
                 CltSoupBinTcpMsg::Logout(LogoutRequest::default()),
