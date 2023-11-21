@@ -186,12 +186,12 @@ mod test {
     use crate::{prelude::*, unittest::setup::model::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
-    use log::info;
+    use log::{info, LevelFilter};
     use serde_json::{from_str, to_string};
 
     #[test]
     fn test_soupbintcp_clt_byteserde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let mut ser = ByteSerializerStack::<1024>::default();
         let msg_inp = clt_msgs_default();
 
@@ -213,7 +213,7 @@ mod test {
 
     #[test]
     fn test_soupbintcp_clt_serde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
 
         let msgs_inp = clt_msgs_default::<SamplePayload>();
         let mut msgs_out = vec![];
@@ -230,7 +230,7 @@ mod test {
 
     #[test]
     fn test_soupbintcp_svc_byteserde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let mut ser = ByteSerializerStack::<1024>::default();
         let msg_inp = svc_msgs_default();
 
@@ -252,7 +252,7 @@ mod test {
 
     #[test]
     fn test_soupbintcp_svc_serde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
 
         let msgs_inp = svc_msgs_default::<SamplePayload>();
         let mut msgs_out = vec![];
@@ -269,7 +269,7 @@ mod test {
 
     #[test]
     fn test_soupbintcp_msg_serde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let mut msgs_inp: Vec<SoupBinTcpMsg<SamplePayload, SamplePayload>> = vec![];
         let msgs_clt = clt_msgs_default();
         let msgs_svc = svc_msgs_default();
@@ -293,7 +293,7 @@ mod test {
 
     #[test]
     fn test_soupbintcp_max_frame_size() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let msg_inp_clt = clt_msgs_default::<Nil>().into_iter().map(|msg| (msg.byte_len(), msg)).collect::<Vec<_>>();
         let msg_inp_svc = svc_msgs_default::<Nil>().into_iter().map(|msg| (msg.byte_len(), msg)).collect::<Vec<_>>();
         for (byte_len, msg) in msg_inp_clt.iter() {

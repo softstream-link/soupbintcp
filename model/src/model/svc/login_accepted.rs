@@ -50,12 +50,12 @@ mod test {
     use crate::{model::svc::login_accepted::LOGIN_ACCEPTED_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
-    use log::info;
+    use log::{info, LevelFilter};
     use serde_json::to_string;
 
     #[test]
     fn test_login_accepted_byteserde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let msg_inp = LoginAccepted::default();
         info!("msg_inp: {}", msg_inp);
         info!("msg_inp:? {:?}", msg_inp);
@@ -71,7 +71,7 @@ mod test {
 
     #[test]
     fn test_login_accepted_serde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let msg_inp = LoginAccepted::default();
         info!("msg_inp:? {:?}", msg_inp);
 

@@ -65,12 +65,12 @@ mod test {
     use crate::prelude::*;
     use byteserde::prelude::*;
     use links_core::unittest::setup;
-    use log::info;
+    use log::{info, LevelFilter};
     use serde_json::{from_str, to_string};
 
     #[test]
     fn test_debug_byteserde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
 
         let msg_inp = Debug::default();
         let expected_packet_len: u16 = (msg_inp.text.len() + msg_inp.packet_type.byte_len()) as u16;
@@ -90,7 +90,7 @@ mod test {
 
     #[test]
     fn test_debug_serde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
 
         let msg_inp = Debug::default();
         info!("msg_inp:? {:?}", msg_inp);

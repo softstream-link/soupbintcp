@@ -60,12 +60,12 @@ mod test {
     use crate::{model::sequenced_data::SEQUENCED_DATA_HEADER_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
-    use log::info;
+    use log::{info, LevelFilter};
     use serde_json::{from_str, to_string};
 
     #[test]
     fn test_sequenced_data_header() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let msg_inp = SPayloadHeader::new(10);
         info!("msg_inp:? {:?}", msg_inp);
 
@@ -81,7 +81,7 @@ mod test {
 
     #[test]
     fn test_sequenced_data_byteserde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let expected_len = SEQUENCED_DATA_HEADER_BYTE_LEN + SamplePayload::default().byte_len();
         let msg_inp = SPayload::new(SamplePayload::default());
         info!("msg_inp:? {:?}", msg_inp);
@@ -98,7 +98,7 @@ mod test {
 
     #[test]
     fn test_sequenced_data_serde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
 
         let msg_inp = SPayload::new(SamplePayload::default());
         info!("msg_inp:? {:?}", msg_inp);

@@ -63,12 +63,12 @@ mod test {
     };
     use byteserde::prelude::*;
     use links_core::unittest::setup;
-    use log::info;
+    use log::{info, LevelFilter};
     use serde_json::{from_str, to_string};
 
     #[test]
     fn test_login_rejected_byteserde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
 
         let msg_inp = LoginRejected::not_authorized();
         info!("msg_inp: {}", msg_inp);
@@ -91,7 +91,7 @@ mod test {
 
     #[test]
     fn test_login_rejected_serde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let msg_inp = LoginRejected::not_authorized();
         info!("msg_inp:? {:?}", msg_inp);
 

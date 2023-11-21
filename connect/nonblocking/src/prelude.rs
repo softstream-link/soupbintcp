@@ -4,3 +4,4 @@ pub use crate::connect::pool::{SvcSoupBinTcpPoolAcceptor, SvcSoupBinTcpRecversPo
 pub use crate::connect::svc::{SvcSoupBinTcpAcceptor, SvcSoupBinTcpRecver, SvcSoupBinTcpSender, SvcSoupBinTcpSupervised};
 
 pub use soupbintcp_connect_core::prelude::*;
+pub use soupbintcp_connect_core::prelude::asserted_short_name;

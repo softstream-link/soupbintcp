@@ -37,12 +37,12 @@ mod test {
     use crate::{model::clt::heartbeat::CLIENT_HEARTBEAT_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
     use links_core::unittest::setup;
-    use log::info;
+    use log::{info, LevelFilter};
     use serde_json::{from_str, to_string};
 
     #[test]
     fn test_clt_heartbeat_byteserde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
 
         let msg_inp = CltHeartbeat::default();
         info!("msg_inp: {}", msg_inp);
@@ -60,7 +60,7 @@ mod test {
 
     #[test]
     fn test_heartbeat_serde() {
-        setup::log::configure_compact();
+        setup::log::configure_compact(LevelFilter::Info);
         let msg_inp = CltHeartbeat::default();
         info!("msg_inp:? {:?}", msg_inp);
 

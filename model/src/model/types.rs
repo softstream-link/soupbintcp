@@ -136,12 +136,12 @@ pub mod soupbintcp_field_types {
     mod test_login_reject_reason {
         use super::LoginRejectReason;
         use links_core::unittest::setup;
-        use log::info;
+        use log::{info, LevelFilter};
         use serde_json::{from_str, to_string};
 
         #[test]
         fn test_login_reject_reason() {
-            setup::log::configure_compact();
+            setup::log::configure_compact(LevelFilter::Info);
 
             let msg_inp = LoginRejectReason::not_authorized();
             log::info!("msg_inp:? {:?}", msg_inp);
