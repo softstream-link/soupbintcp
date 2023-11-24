@@ -2,7 +2,6 @@ use std::{
     fmt::Debug,
     io::{Error, ErrorKind},
     marker::PhantomData,
-    sync::Arc,
 };
 
 use crate::prelude::*;
@@ -11,22 +10,22 @@ use byteserde::prelude::{from_slice, to_bytes_stack};
 /// Performs two tasks
 ///  * Divides [bytes::BytesMut] into frames and deserializes into a [SvcSoupBinTcpMsg] type
 ///  * Takes [CltSoupBinTcpMsg] type and serializes into byte array
-#[derive(Debug)]
-pub struct CltSoupBinTcpProtocolSupervised<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
+#[derive(Debug, Clone)]
+pub struct CltSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     phantom: PhantomData<(RecvP, SendP)>,
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBinTcpProtocolSupervised<RecvP, SendP> {
-    pub fn new_ref() -> Arc<Self> {
-        Arc::new(Self { phantom: PhantomData })
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBinTcpMessenger<RecvP, SendP> {
+    pub fn new() -> Self {
+        Self { phantom: PhantomData }
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for CltSoupBinTcpProtocolSupervised<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for CltSoupBinTcpMessenger<RecvP, SendP> {
     #[inline(always)]
     fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for CltSoupBinTcpProtocolSupervised<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for CltSoupBinTcpMessenger<RecvP, SendP> {
     type RecvT = SvcSoupBinTcpMsg<RecvP>;
     type SendT = CltSoupBinTcpMsg<SendP>;
 
@@ -46,27 +45,26 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
         }
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for CltSoupBinTcpProtocolSupervised<RecvP, SendP> {}
 
 /// Performs two tasks
 ///  * Divides [bytes::BytesMut] into frames and deserializes into a [CltSoupBinTcpMsg] type
 ///  * Takes [SvcSoupBinTcpMsg] type and serializes into byte array
-#[derive(Debug)]
-pub struct SvcSoupBinTcpProtocolSupervised<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
+#[derive(Debug, Clone)]
+pub struct SvcSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     phantom: PhantomData<(RecvP, SendP)>,
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBinTcpProtocolSupervised<RecvP, SendP> {
-    pub fn new_ref() -> Arc<Self> {
-        Arc::new(Self { phantom: PhantomData })
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBinTcpMessenger<RecvP, SendP> {
+    pub fn new_ref() -> Self {
+        Self { phantom: PhantomData }
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for SvcSoupBinTcpProtocolSupervised<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for SvcSoupBinTcpMessenger<RecvP, SendP> {
     #[inline(always)]
     fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for SvcSoupBinTcpProtocolSupervised<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for SvcSoupBinTcpMessenger<RecvP, SendP> {
     type RecvT = CltSoupBinTcpMsg<RecvP>;
     type SendT = SvcSoupBinTcpMsg<SendP>;
 
@@ -86,7 +84,6 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
         }
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for SvcSoupBinTcpProtocolSupervised<RecvP, SendP> {}
 
 #[cfg(test)]
 #[cfg(feature = "unittest")]
@@ -100,8 +97,8 @@ mod test {
     use links_core::unittest::setup;
     use soupbintcp_model::unittest::setup::model::{clt_msgs_default, svc_msgs_default};
 
-    type CltMessenger = CltSoupBinTcpProtocolSupervised<SamplePayload, SamplePayload>;
-    type SvcMessenger = SvcSoupBinTcpProtocolSupervised<SamplePayload, SamplePayload>;
+    type CltMessenger = CltSoupBinTcpMessenger<SamplePayload, SamplePayload>;
+    type SvcMessenger = SvcSoupBinTcpMessenger<SamplePayload, SamplePayload>;
     #[test]
     fn test_soup_bin_clt_send_messenger() {
         setup::log::configure();
