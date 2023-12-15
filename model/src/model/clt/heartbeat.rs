@@ -15,12 +15,17 @@ pub struct CltHeartbeat {
     #[serde(default, skip_serializing)]
     packet_type: PacketTypeCltHeartbeat,
 }
-impl Default for CltHeartbeat {
-    fn default() -> Self {
+impl CltHeartbeat {
+    pub const fn new() -> CltHeartbeat {
         CltHeartbeat {
             packet_length: CLIENT_HEARTBEAT_PACKET_LENGTH,
-            packet_type: Default::default(),
+            packet_type: PacketTypeCltHeartbeat::new(),
         }
+    }
+}
+impl Default for CltHeartbeat {
+    fn default() -> Self {
+        CltHeartbeat::new()
     }
 }
 impl Display for CltHeartbeat {

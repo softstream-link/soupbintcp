@@ -52,7 +52,7 @@ impl Debug for LoginRequest {
 }
 impl Default for LoginRequest {
     fn default() -> Self {
-        LoginRequest::new(b"dummy".as_slice().into(), b"dummy".as_slice().into(), b"session #1".into(), 1_u64.into(), 5000_u16.into())
+        LoginRequest::new(b"dummy".as_slice().into(), b"dummy".as_slice().into(), b"session #1".into(), 1_u64.into(), 1000_u16.into())
     }
 }
 impl Display for LoginRequest {
@@ -104,10 +104,10 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"5000"}"#, json_out);
+        assert_eq!(r#"{"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"1000"}"#, json_out);
 
         // acceptable alternatives
-        for (i, pass_json) in vec![r#" {"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"5000"} "#].iter().enumerate() {
+        for (i, pass_json) in vec![r#" {"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"1000"} "#].iter().enumerate() {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: LoginRequest = from_str(pass_json).unwrap();

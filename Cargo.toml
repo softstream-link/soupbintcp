@@ -17,13 +17,13 @@ categories = ["API bindings"]
 
 [workspace.dependencies]
 # derive macros
-byteserde = { version = "0.5" }
-byteserde_derive = { version = "0.5" }
-byteserde_types = { version = "0.5" }
-# byteserde = { version = "0.4.0", path = "../byteserde/byteserde" }
-# byteserde_derive = { version = "0.4.0", path = "../byteserde/byteserde_derive" }
-# byteserde_types = { version = "0.4.0", path = "../byteserde/byteserde_types" }
-derive_more = "0.99"                               # try_into, etc
+# byteserde = { version = "0.5" }
+# byteserde_derive = { version = "0.5" }
+# byteserde_types = { version = "0.5" }
+byteserde = { path = "../byteserde/byteserde" }
+byteserde_derive = { path = "../byteserde/byteserde_derive" }
+byteserde_types = { path = "../byteserde/byteserde_types" }
+derive_more = "0.99"                                          # try_into, etc
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 

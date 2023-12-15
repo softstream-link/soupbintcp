@@ -15,12 +15,17 @@ pub struct LogoutRequest {
     #[serde(default, skip_serializing)]
     packet_type: PacketTypeLogoutRequest,
 }
-impl Default for LogoutRequest {
-    fn default() -> Self {
+impl LogoutRequest {
+    pub const fn new() -> LogoutRequest {
         LogoutRequest {
             packet_length: LOGOUT_REQUEST_PACKET_LENGTH,
-            packet_type: Default::default(),
+            packet_type: PacketTypeLogoutRequest::new(),
         }
+    }
+}
+impl Default for LogoutRequest {
+    fn default() -> Self {
+        LogoutRequest::new()
     }
 }
 impl Display for LogoutRequest {

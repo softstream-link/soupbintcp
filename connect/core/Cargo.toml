@@ -22,15 +22,16 @@ byteserde = { workspace = true }
 bytes = { workspace = true }
 spin = { workspace = true }
 
-log = { workspace = true, optional = true }
+log = { workspace = true }
+
 env_logger = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }
 
 [dev-dependencies]
-soupbintcp_model = { workspace = true , features = ["unittest"] }
-links_core = { workspace = true , features = ["unittest"] }
+soupbintcp_model = { workspace = true, features = ["unittest"] }
+links_core = { workspace = true, features = ["unittest"] }
 
 [features]
 default = []
 full = ["unittest"]
-unittest = ["dep:log", "dep:env_logger", "dep:colored"]
+unittest = ["dep:env_logger", "dep:colored"]

@@ -14,12 +14,17 @@ pub struct EndOfSession {
     #[serde(default, skip_serializing)]
     packet_type: PacketTypeEndOfSession,
 }
-impl Default for EndOfSession {
-    fn default() -> Self {
+impl EndOfSession {
+    pub const fn new() -> EndOfSession {
         EndOfSession {
             packet_length: END_OF_SESSION_PACKET_LENGTH,
-            packet_type: Default::default(),
+            packet_type: PacketTypeEndOfSession::new(),
         }
+    }
+}
+impl Default for EndOfSession {
+    fn default() -> Self {
+        EndOfSession::new()
     }
 }
 impl Display for EndOfSession {

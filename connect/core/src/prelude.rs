@@ -4,4 +4,8 @@ pub use soupbintcp_model::prelude::*;
 
 pub use crate::core::framer::SoupBinTcpFramer;
 pub use crate::core::messenger::{CltSoupBinTcpMessenger, SvcSoupBinTcpMessenger};
-pub use crate::core::protocol::{CltSoupBinTcpProtocolAuth, CltSoupBinTcpProtocolSupervised, SvcSoupBinTcpProtocolAuth, SvcSoupBinTcpProtocolSupervised};
+pub use crate::core::protocol::{
+    auto::{CltSoupBinTcpProtocolAuto, SvcSoupBinTcpProtocolAuto},
+    manual::{CltSoupBinTcpProtocolManual, SvcSoupBinTcpProtocolManual},
+    CltSoupBinTcpRecvConnectionState, SvcSoupBinTcpRecvConnectionState, SvcSoupBinTcpSendConnectionState,
+};

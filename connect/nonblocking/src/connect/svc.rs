@@ -1,10 +1,10 @@
 use crate::prelude::*;
 
-pub type SvcSoupBinTcpSupervised<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Svc<SvcSoupBinTcpProtocolSupervised<RecvP, SendP>, C, MAX_MSG_SIZE>;
-pub type SvcSoupBinTcpAuth<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Svc<SvcSoupBinTcpProtocolAuth<RecvP, SendP>, C, MAX_MSG_SIZE>;
+pub type SvcSoupBinTcpManual<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Svc<SvcSoupBinTcpProtocolManual<RecvP, SendP>, C, MAX_MSG_SIZE>;
+pub type SvcSoupBinTcpAuto<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Svc<SvcSoupBinTcpProtocolAuto<RecvP, SendP>, C, MAX_MSG_SIZE>;
 
-pub type SvcSoupBinTcpAcceptorSupervised<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = SvcAcceptor<SvcSoupBinTcpProtocolSupervised<RecvP, SendP>, C, MAX_MSG_SIZE>;
-pub type SvcSoupBinTcpAcceptorAuth<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = SvcAcceptor<SvcSoupBinTcpProtocolAuth<RecvP, SendP>, C, MAX_MSG_SIZE>;
+// pub type SvcSoupBinTcpAcceptorManual<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = SvcAcceptor<SvcSoupBinTcpProtocolManual<RecvP, SendP>, C, MAX_MSG_SIZE>;
+// pub type SvcSoupBinTcpAcceptorAuto<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = SvcAcceptor<SvcSoupBinTcpProtocolAuto<RecvP, SendP>, C, MAX_MSG_SIZE>;
 
 pub type SvcSoupBinTcpRecver<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltRecver<SvcSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
 pub type SvcSoupBinTcpSender<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltSender<SvcSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
@@ -25,28 +25,21 @@ mod test {
 
         let addr = setup::net::rand_avail_addr_port();
 
-        let mut svc = SvcSoupBinTcpSupervised::<_, _, _, 128>::bind(
-            addr,
-            LoggerCallback::new_ref(),
-            NonZeroUsize::new(1).unwrap(),
-            Some(SvcSoupBinTcpProtocolSupervised::<Nil, Nil>::default()),
-            Some("soupbintcp/unittest"),
-        )
-        .unwrap();
+        let mut svc = SvcSoupBinTcpManual::<_, _, _, 128>::bind(addr, LoggerCallback::new_ref(), NonZeroUsize::new(1).unwrap(), SvcSoupBinTcpProtocolManual::<Nil, Nil>::default(), Some("soupbintcp/unittest")).unwrap();
         info!("svc: {}", svc);
 
-        let mut clt = CltSoupBinTcpSupervised::<_, _, _, 128>::connect(
+        let mut clt = CltSoupBinTcpManual::<_, _, _, 128>::connect(
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
             LoggerCallback::new_ref(),
-            Some(CltSoupBinTcpProtocolSupervised::<Nil, Nil>::default()),
+            CltSoupBinTcpProtocolManual::<Nil, Nil>::default(),
             Some("soupbintcp/unittest"),
         )
         .unwrap();
         info!("clt: {}", clt);
 
-        svc.pool_accept_busywait_timeout(setup::net::default_connect_timeout()).unwrap().unwrap_accepted();
+        svc.accept_into_pool_busywait_timeout(setup::net::default_connect_timeout()).unwrap().unwrap_accepted();
         info!("svc: {}", svc);
 
         let mut clt_msg = CltSoupBinTcpMsg::Login(LoginRequest::default());

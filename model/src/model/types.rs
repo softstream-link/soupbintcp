@@ -6,24 +6,26 @@ use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedL
 pub mod soupbintcp_packet_types {
     use super::*;
     use byteserde_types::const_char_ascii;
-    const_char_ascii!(PacketTypeCltHeartbeat, b'R', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeSvcHeartbeat, b'H', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeDebug, b'+', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeEndOfSession, b'Z', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeLoginAccepted, b'A', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeLoginRejected, b'J', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeLoginRequest, b'L', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeLogoutRequest, b'O', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeSequencedData, b'S', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    const_char_ascii!(PacketTypeUnsequencedData, b'U', #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeCltHeartbeat, b'R', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeSvcHeartbeat, b'H', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeDebug, b'+', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeEndOfSession, b'Z', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeLoginAccepted, b'A', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeLoginRejected, b'J', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeLoginRequest, b'L', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeLogoutRequest, b'O', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeSequencedData, b'S', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    const_char_ascii!(PacketTypeUnsequencedData, b'U', true, #[derive(ByteSerializeStack, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
 }
 
 pub mod soupbintcp_field_types {
+    use std::time::Duration;
+
     use super::*;
     use byteserde_types::{char_ascii, string_ascii_fixed};
     use links_core::core::macros::short_type_name;
 
-    string_ascii_fixed!(SessionId, 10, b' ', true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    string_ascii_fixed!(SessionId, 10, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
     impl Default for SessionId {
         fn default() -> Self {
             // all banks to log into the currently active session
@@ -32,7 +34,7 @@ pub mod soupbintcp_field_types {
     }
 
     // TODO add docs https://stackoverflow.com/questions/33999341/generating-documentation-in-macros
-    string_ascii_fixed!(SequenceNumber, 20, b' ', true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    string_ascii_fixed!(SequenceNumber, 20, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
     impl From<u64> for SequenceNumber {
         fn from(v: u64) -> Self {
             v.to_string().as_bytes().into()
@@ -45,7 +47,7 @@ pub mod soupbintcp_field_types {
         }
     }
 
-    string_ascii_fixed!(TimeoutMs, 5, b' ', true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    string_ascii_fixed!(TimeoutMs, 5, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
     impl From<u16> for TimeoutMs {
         fn from(v: u16) -> Self {
             v.to_string().as_bytes().into()
@@ -63,21 +65,34 @@ pub mod soupbintcp_field_types {
             s.parse::<u64>().unwrap_or_else(|_| panic!("Failed to convert {:?} to u64", v))
         }
     }
-    impl Default for TimeoutMs {
-        fn default() -> Self {
-            1000u16.into()
+    impl From<TimeoutMs> for Duration {
+        fn from(v: TimeoutMs) -> Self {
+            Duration::from_millis(u64::from(v))
         }
     }
+    impl From<Duration> for TimeoutMs {
+        fn from(v: Duration) -> Self {
+            assert!(v.as_millis() <= u16::MAX as u128, "Duration {:?} exceeds max of {:?}", v, Duration::from_millis(u16::MAX as u64));
+            (v.as_millis() as u16).into()
+        }
+    }
+
     #[cfg(test)]
     mod test_timeout_ms {
         use super::TimeoutMs;
         use links_core::unittest::setup;
         use log::info;
+        use std::time::Duration;
 
         #[test]
         fn test_sequence_number() {
             setup::log::configure();
-            let t = TimeoutMs::default();
+            let mut t: TimeoutMs = Duration::from_millis(1000).into();
+            info!("Duration::from_millis: {}", t);
+            let d : Duration = t.into();
+            info!("Duration: {:?}", d);
+            t = 1000_u16.into();
+
             let millis_u64: u64 = t.into();
             info!("millis_u64: {}", millis_u64);
             assert_eq!(millis_u64, 1000);
@@ -87,8 +102,8 @@ pub mod soupbintcp_field_types {
         }
     }
 
-    string_ascii_fixed!(UserName, 6, b' ', true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    string_ascii_fixed!(Password, 10, b' ', true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    string_ascii_fixed!(UserName, 6, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
+    string_ascii_fixed!(Password, 10, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
     char_ascii!(LoginRejectReason, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
     impl LoginRejectReason {
         #[inline(always)]
@@ -110,7 +125,9 @@ pub mod soupbintcp_field_types {
     }
     impl serde::Serialize for LoginRejectReason {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: serde::Serializer {
+        where
+            S: serde::Serializer,
+        {
             if self.is_not_authorized() {
                 serializer.serialize_str("NOT_AUTHORIZED")
             } else if self.is_session_not_available() {
@@ -122,7 +139,9 @@ pub mod soupbintcp_field_types {
     }
     impl<'de> serde::Deserialize<'de> for LoginRejectReason {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: serde::Deserializer<'de> {
+        where
+            D: serde::Deserializer<'de>,
+        {
             let value = String::deserialize(deserializer)?.to_uppercase();
             match value.as_str() {
                 "NOT_AUTHORIZED" | "A" => Ok(Self::not_authorized()),

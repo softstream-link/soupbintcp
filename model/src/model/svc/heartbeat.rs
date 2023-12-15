@@ -16,13 +16,17 @@ pub struct SvcHeartbeat {
     #[serde(default, skip_serializing)]
     packet_type: PacketTypeSvcHeartbeat,
 }
-
-impl Default for SvcHeartbeat {
-    fn default() -> Self {
+impl SvcHeartbeat{
+    pub const fn new() -> Self {
         SvcHeartbeat {
             packet_length: SERVER_HEARTBEAT_PACKET_LENGTH,
-            packet_type: Default::default(),
+            packet_type: PacketTypeSvcHeartbeat::new(),
         }
+    }
+}
+impl Default for SvcHeartbeat {
+    fn default() -> Self {
+        SvcHeartbeat::new()
     }
 }
 impl Display for SvcHeartbeat {
