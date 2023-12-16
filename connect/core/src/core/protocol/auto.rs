@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use log::{debug, log_enabled, Level, error};
+use log::debug;
 use std::{
     fmt::Debug,
     io::{Error, ErrorKind},

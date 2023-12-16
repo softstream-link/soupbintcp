@@ -35,7 +35,6 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
         CltSoupBinTcpMessenger::<RecvP, SendP>::deserialize(frame)
     }
 }
-//do nothing all Protocol methods are already implemented by default and do nothing so that they can be optimized away by compiler
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for CltSoupBinTcpProtocolManual<RecvP, SendP> {
     #[inline(always)]
     fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
@@ -43,6 +42,10 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
         debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("CltSoupBinTcpProtocolManual", Self), who.con_id(), msg);
 
         (*self.recv_con_state.lock()).update(msg);
+    }
+    #[inline(always)]
+    fn is_connected(&self) -> bool {
+        (*self.recv_con_state.lock()).is_connected()
     }
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for CltSoupBinTcpProtocolManual<RecvP, SendP> {}
@@ -73,7 +76,6 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
         SvcSoupBinTcpMessenger::<RecvP, SendP>::deserialize(frame)
     }
 }
-//do nothing all Protocol methods are already implemented by default and do nothing so that they can be optimized away by compiler
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
     #[inline(always)]
     fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
@@ -116,15 +118,17 @@ mod test {
     fn test_protocol() {
         setup::log::configure_compact(log::LevelFilter::Info);
         const SOUP_BIN_MAX_FRAME_SIZE: usize = SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG;
-        let clt_clbk = CounterCallback::new_ref();
-        let svc_clbk = CounterCallback::new_ref();
+        let clt_count = CounterCallback::new_ref();
+        let svc_count = CounterCallback::new_ref();
+        let clt_clbk = ChainCallback::new_ref(vec![clt_count.clone(), LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug)]);
+        let svc_clbk = ChainCallback::new_ref(vec![svc_count.clone(), LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug)]);
         let addr = setup::net::rand_avail_addr_port();
 
         let mut svc_sender = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, svc_clbk.clone(), NonZeroUsize::new(1).unwrap(), SvcProtocolManual::default(), Some("svc/soupbintcp/supervised"))
             .unwrap()
             .into_sender_with_spawned_recver();
 
-        let clt = Clt::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::connect(
+        let mut clt_sender = Clt::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::connect(
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
@@ -136,15 +140,23 @@ mod test {
         .into_sender_with_spawned_recver();
 
         // client should not send any messages to perform login
-        assert_eq!(clt_clbk.sent_count(), 0);
+        assert_eq!(clt_count.sent_count(), 0);
 
         info!("svc.all_connected(): {}", svc_sender.all_connected());
         assert!(!svc_sender.all_connected());
-        info!("clt.is_connected(): {}", clt.is_connected());
-        // assert!(!clt.is_connected());
+        info!("clt.is_connected(): {}", clt_sender.is_connected());
+        assert!(!clt_sender.is_connected());
 
-        // server should also not sent any messages but to make sure connection was established sending a hbeat
-        svc_sender.send_busywait_timeout(&mut SvcHeartbeat::default().into(), setup::net::default_connect_timeout()).unwrap().unwrap_completed();
-        assert_eq!(svc_clbk.sent_count(), 1);
+        let timeout = setup::net::default_connect_timeout();
+
+        clt_sender.send_busywait_timeout(&mut LoginRequest::default().into(), timeout).unwrap().unwrap_completed();
+        svc_sender.send_busywait_timeout(&mut LoginAccepted::default().into(), timeout).unwrap().unwrap_completed();
+
+
+        assert!(clt_sender.is_connected_busywait_timeout(timeout));
+        assert!(svc_sender.is_next_connected());
+
+        assert_eq!(clt_count.sent_count(), 1);
+        assert_eq!(svc_count.sent_count(), 1);
     }
 }
