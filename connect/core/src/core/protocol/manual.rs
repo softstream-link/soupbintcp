@@ -93,8 +93,8 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
         (*self.send_con_state.lock()).update(msg);
     }
     /// Will returns `true` if all of below are `true`
-    /// * [`SvcRecvConnectionState::is_connected`]
-    /// * [`SvcSendConnectionState::is_connected`]
+    /// * [`crate::prelude::SvcSoupBinTcpRecvConnectionState::is_connected`]
+    /// * [`crate::prelude::SvcSoupBinTcpSendConnectionState::is_connected`]
     #[inline(always)]
     fn is_connected(&self) -> bool {
         (*self.recv_con_state.lock()).is_connected() && (*self.send_con_state.lock()).is_connected()

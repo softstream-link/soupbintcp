@@ -15,9 +15,9 @@ pub struct CltSoupBinTcpMessenger<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBi
     phantom: PhantomData<(RecvP, SendP)>,
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBinTcpMessenger<RecvP, SendP> {
-    pub fn new() -> Self {
-        Self { phantom: PhantomData }
-    }
+    // pub fn new() -> Self {
+    //     Self { phantom: PhantomData }
+    // }
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for CltSoupBinTcpMessenger<RecvP, SendP> {
     #[inline(always)]

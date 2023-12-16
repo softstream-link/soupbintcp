@@ -54,7 +54,7 @@ impl From<CltSoupBinTcpRecvConnectionState> for ProtocolState<CltSoupBinTcpRecvC
     }
 }
 
-/// Helper to establish connection status of Svc, uses all recved messages to check. 
+/// Helper to establish connection status of Svc, uses all recved messages to check.
 /// Confirms that last message received with in `max_recv_interval` duration.
 #[derive(Debug, Clone, Default)]
 pub struct SvcSoupBinTcpRecvConnectionState {
@@ -65,10 +65,13 @@ impl SvcSoupBinTcpRecvConnectionState {
     fn update<RecvP: SoupBinTcpPayload<RecvP>>(&mut self, msg: &CltSoupBinTcpMsg<RecvP>) {
         use CltSoupBinTcpMsg::*;
         let now = Instant::now();
-        match msg {
-            Login(msg) => self.max_recv_interval = Some(msg.hbeat_timeout_ms.into()),
-            _ => {}
+        if let Login(msg) = msg {
+            self.max_recv_interval = Some(msg.hbeat_timeout_ms.into())
         }
+        // match msg {
+        //     Login(msg) => self.max_recv_interval = Some(msg.hbeat_timeout_ms.into()),
+        //     _ => {}
+        // }
         self.any_msg_recved = Some(now);
     }
 }
@@ -107,10 +110,11 @@ impl SvcSoupBinTcpSendConnectionState {
 impl ConnectionStatus for SvcSoupBinTcpSendConnectionState {
     /// return `true` if [LoginAccepted] was sent and [EndOfSession] was not sent
     fn is_connected(&self) -> bool {
-        match (self.login_accepted, self.end_of_session) {
-            (Some(_), None) => true,
-            _ => false,
-        }
+        matches!((self.login_accepted, self.end_of_session), (Some(_), None))
+        // match (self.login_accepted, self.end_of_session) {
+        //     (Some(_), None) => true,
+        //     _ => false,
+        // }
     }
 }
 impl From<SvcSoupBinTcpSendConnectionState> for ProtocolState<SvcSoupBinTcpSendConnectionState> {

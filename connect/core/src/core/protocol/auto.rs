@@ -29,7 +29,7 @@ pub struct CltSoupBinTcpProtocolAuto<RecvP: SoupBinTcpPayload<RecvP>, SendP: Sou
     phantom: PhantomData<(RecvP, SendP)>,
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBinTcpProtocolAuto<RecvP, SendP> {
-    /// Creates new instance of [CltSoupBinTcpProtocol]
+    /// Creates new instance
     ///
     /// # Arguments
     /// * `username` - username to be used during authentication
@@ -142,7 +142,7 @@ pub struct SvcSoupBinTcpProtocolAuto<RecvP: SoupBinTcpPayload<RecvP>, SendP: Sou
     phantom: PhantomData<(RecvP, SendP)>,
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBinTcpProtocolAuto<RecvP, SendP> {
-    /// Creates new instance of [SvcSoupBinTcpProtocol]
+    /// Creates new instance
     ///
     /// # Arguments
     /// * `username` - username to be used during authentication
@@ -225,8 +225,8 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
     }
 
     /// Will returns `true` if all of below are `true`
-    /// * [`SvcRecvConnectionState::is_connected`]
-    /// * [`SvcSendConnectionState::is_connected`]
+    /// * [`crate::prelude::SvcSoupBinTcpRecvConnectionState::is_connected`]
+    /// * [`crate::prelude::SvcSoupBinTcpSendConnectionState::is_connected`]
     #[inline(always)]
     fn is_connected(&self) -> bool {
         (*self.recv_con_state.lock()).is_connected() && (*self.send_con_state.lock()).is_connected()

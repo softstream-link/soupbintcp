@@ -1,4 +1,5 @@
-pub use crate::connect::clt::{CltSoupBinTcpAuto, CltSoupBinTcpManual, CltSoupBinTcpRecver, CltSoupBinTcpSender};
+pub use crate::connect::clt::{CltSoupBinTcpAuto, CltSoupBinTcpManual};
+// pub use crate::connect::clt::{CltSoupBinTcpRecver, CltSoupBinTcpSender};
 // pub use crate::connect::pool::{CltSoupBinTcpRecversPool, CltSoupBinTcpSendersPool};
 // pub use crate::connect::pool::{SvcSoupBinTcpPoolAcceptor, SvcSoupBinTcpRecversPool, SvcSoupBinTcpSendersPool};
 // pub use crate::connect::svc::{SvcSoupBinTcpAcceptorManual};
