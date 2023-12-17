@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use log::debug;
 use std::{
     fmt::Debug,
     io::{Error, ErrorKind},
@@ -86,19 +85,17 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
         }
     }
 
-    /// updates internal timestamp of every message received from server to be able to detect connection loss via [`Self::is_connected`]
+    /// Will delegate to [`CltSoupBinTcpRecvConnectionState::on_recv`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
     #[inline(always)]
     fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
         #[cfg(debug_assertions)]
-        debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("CltSoupBinTcpProtocolAuto", Self), who.con_id(), msg);
+        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("CltSoupBinTcpProtocolAuto", Self), who.con_id(), msg);
 
-        (*self.recv_con_state.lock()).update(msg);
+        (*self.recv_con_state.lock()).on_recv(msg);
     }
 
-    /// Will returns `true` if all of below are `true`
-    /// * [LoginAccepted] was received
-    /// * [EndOfSession] was `NOT` received
-    /// * time elapsed from the last message received is less then `login.hbeat_timeout_ms / hbeat_tolerance_factor` both of which are arguments of [`Self::new`]
+    /// Will delegate to [`CltSoupBinTcpRecvConnectionState::is_connected`]
     #[inline(always)]
     fn is_connected(&self) -> bool {
         (*self.recv_con_state.lock()).is_connected()
@@ -208,20 +205,23 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
             RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Did not get LoginRequest during timeout: {:?}", self.on_connect_timeout))),
         }
     }
-    /// updates internal timestamp of every message received from client to be able to detect connection loss via [`Self::is_connected`]
+    /// Will delegate to [`SvcSoupBinTcpRecvConnectionState::on_recv`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
     #[inline(always)]
     fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
         #[cfg(debug_assertions)]
-        debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolAuto", Self), who.con_id(), msg);
-        (*self.recv_con_state.lock()).update(msg);
+        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolAuto", Self), who.con_id(), msg);
+
+        (*self.recv_con_state.lock()).on_recv(msg);
     }
     /// updates internal timestamp of when [LoginAccepted] and [EndOfSession] where sent detect connection loss via [`Self::is_connected`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
     #[inline(always)]
     fn on_sent<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::SendT) {
         #[cfg(debug_assertions)]
-        debug!("{}::on_sent: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolAuto", Self), who.con_id(), msg);
+        log::debug!("{}::on_sent: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolAuto", Self), who.con_id(), msg);
 
-        (*self.send_con_state.lock()).update(msg);
+        (*self.send_con_state.lock()).on_sent(msg);
     }
 
     /// Will returns `true` if all of below are `true`

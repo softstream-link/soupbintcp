@@ -1,8 +1,14 @@
-use log::debug;
-
 use crate::prelude::*;
 use std::{fmt::Debug, io::Error, marker::PhantomData, time::Duration};
 
+/// Implements SoupBinTcp protocol for client side.
+///
+/// # [ProtocolCore] Features
+/// * [`Self::on_recv`]
+/// * [`Self::is_connected`]
+///
+/// # [Protocol] Features
+/// * Not implemented - falls back to defaults, which are optimized away by compiler.
 #[derive(Debug, Clone)]
 pub struct CltSoupBinTcpProtocolManual<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     recv_con_state: ProtocolState<CltSoupBinTcpRecvConnectionState>,
@@ -36,13 +42,17 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
     }
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for CltSoupBinTcpProtocolManual<RecvP, SendP> {
+    // Will delegate to [`CltSoupBinTcpRecvConnectionState::on_recv`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
     #[inline(always)]
     fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
         #[cfg(debug_assertions)]
-        debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("CltSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("CltSoupBinTcpProtocolManual", Self), who.con_id(), msg);
 
-        (*self.recv_con_state.lock()).update(msg);
+        (*self.recv_con_state.lock()).on_recv(msg);
     }
+
+    // Will delegate to [`CltSoupBinTcpRecvConnectionState::is_connected`]
     #[inline(always)]
     fn is_connected(&self) -> bool {
         (*self.recv_con_state.lock()).is_connected()
@@ -50,6 +60,10 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for CltSoupBinTcpProtocolManual<RecvP, SendP> {}
 
+/// Implements SoupBinTcp protocol for server side.
+///
+/// # [ProtocolCore] Features
+///
 #[derive(Debug, Clone)]
 pub struct SvcSoupBinTcpProtocolManual<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     recv_con_state: ProtocolState<SvcSoupBinTcpRecvConnectionState>,
@@ -86,20 +100,24 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
     }
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
+    /// Will delegate to [`SvcSoupBinTcpRecvConnectionState::on_recv`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
     #[inline(always)]
     fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
         #[cfg(debug_assertions)]
-        debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolManual", Self), who.con_id(), msg);
 
-        (*self.recv_con_state.lock()).update(msg);
+        (*self.recv_con_state.lock()).on_recv(msg);
     }
 
+    /// Will delegate to [`SvcSoupBinTcpSendConnectionState::on_sent`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
     #[inline(always)]
     fn on_sent<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::SendT) {
         #[cfg(debug_assertions)]
-        debug!("{}::on_sent: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+        log::debug!("{}::on_sent: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolManual", Self), who.con_id(), msg);
 
-        (*self.send_con_state.lock()).update(msg);
+        (*self.send_con_state.lock()).on_sent(msg);
     }
     /// Will returns `true` if all of below are `true`
     /// * [`crate::prelude::SvcSoupBinTcpRecvConnectionState::is_connected`]

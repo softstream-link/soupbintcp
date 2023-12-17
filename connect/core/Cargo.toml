@@ -22,10 +22,9 @@ byteserde = { workspace = true }
 bytes = { workspace = true }
 spin = { workspace = true }
 
-log = { workspace = true }
-
 env_logger = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }
+log = { workspace = true } # TODO only request when debug_assertions are on, how to do this correctly?
 
 [dev-dependencies]
 soupbintcp_model = { workspace = true, features = ["unittest"] }
