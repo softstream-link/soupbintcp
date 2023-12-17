@@ -1,4 +1,5 @@
 pub mod auto;
+pub mod is_connected;
 pub mod manual;
 
 use crate::prelude::*;

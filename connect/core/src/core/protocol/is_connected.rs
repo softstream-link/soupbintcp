@@ -1,29 +1,35 @@
 use crate::prelude::*;
-use std::{fmt::Debug, io::Error, marker::PhantomData};
+use std::{fmt::Debug, io::Error, marker::PhantomData, time::Duration};
 
 /// Implements SoupBinTcp protocol for client side.
 ///
 /// # [ProtocolCore] Features
-/// * Not implemented - falls back to defaults, which are optimized away by compiler.
+/// * [`Self::on_recv`]
+/// * [`Self::is_connected`]
 ///
 /// # [Protocol] Features
 /// * Not implemented - falls back to defaults, which are optimized away by compiler.
 #[derive(Debug, Clone)]
-pub struct CltSoupBinTcpProtocolManual<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
+pub struct CltSoupBinTcpProtocolIsConnected<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
+    recv_con_state: ProtocolState<CltSoupBinTcpRecvConnectionState>,
     phantom: PhantomData<(RecvP, SendP)>,
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for CltSoupBinTcpProtocolManual<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for CltSoupBinTcpProtocolIsConnected<RecvP, SendP> {
     fn default() -> Self {
-        Self { phantom: PhantomData }
+        let max_recv_interval = Duration::from_secs_f64(2.5);
+        Self {
+            recv_con_state: CltSoupBinTcpRecvConnectionState::new(max_recv_interval).into(),
+            phantom: PhantomData,
+        }
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for CltSoupBinTcpProtocolManual<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for CltSoupBinTcpProtocolIsConnected<RecvP, SendP> {
     #[inline(always)]
     fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for CltSoupBinTcpProtocolManual<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for CltSoupBinTcpProtocolIsConnected<RecvP, SendP> {
     type RecvT = <CltSoupBinTcpMessenger<RecvP, SendP> as Messenger>::RecvT;
     type SendT = <CltSoupBinTcpMessenger<RecvP, SendP> as Messenger>::SendT;
     #[inline(always)]
@@ -35,32 +41,56 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
         CltSoupBinTcpMessenger::<RecvP, SendP>::deserialize(frame)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for CltSoupBinTcpProtocolManual<RecvP, SendP> {}
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for CltSoupBinTcpProtocolManual<RecvP, SendP> {}
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for CltSoupBinTcpProtocolIsConnected<RecvP, SendP> {
+    // Will delegate to [`CltSoupBinTcpRecvConnectionState::on_recv`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
+    #[inline(always)]
+    fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
+        #[cfg(debug_assertions)]
+        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("CltSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+
+        (*self.recv_con_state.lock()).on_recv(msg);
+    }
+
+    // Will delegate to [`CltSoupBinTcpRecvConnectionState::is_connected`]
+    #[inline(always)]
+    fn is_connected(&self) -> bool {
+        (*self.recv_con_state.lock()).is_connected()
+    }
+}
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for CltSoupBinTcpProtocolIsConnected<RecvP, SendP> {}
 
 /// Implements SoupBinTcp protocol for server side.
 ///
 /// # [ProtocolCore] Features
-/// * Not implemented - falls back to defaults, which are optimized away by compiler.
-///
+/// * [`Self::on_recv`]
+/// * [`Self::on_sent`]
+/// * [`Self::is_connected`]
+/// 
 /// # [Protocol] Features
 /// * Not implemented - falls back to defaults, which are optimized away by compiler.
 #[derive(Debug, Clone)]
-pub struct SvcSoupBinTcpProtocolManual<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
+pub struct SvcSoupBinTcpProtocolIsConnected<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
+    recv_con_state: ProtocolState<SvcSoupBinTcpRecvConnectionState>,
+    send_con_state: ProtocolState<SvcSoupBinTcpSendConnectionState>,
     phantom: PhantomData<(RecvP, SendP)>,
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for SvcSoupBinTcpProtocolIsConnected<RecvP, SendP> {
     fn default() -> Self {
-        Self { phantom: PhantomData }
+        Self {
+            recv_con_state: SvcSoupBinTcpRecvConnectionState::default().into(),
+            send_con_state: SvcSoupBinTcpSendConnectionState::default().into(),
+            phantom: PhantomData,
+        }
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for SvcSoupBinTcpProtocolIsConnected<RecvP, SendP> {
     #[inline(always)]
     fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger for SvcSoupBinTcpProtocolIsConnected<RecvP, SendP> {
     type RecvT = <SvcSoupBinTcpMessenger<RecvP, SendP> as Messenger>::RecvT;
     type SendT = <SvcSoupBinTcpMessenger<RecvP, SendP> as Messenger>::SendT;
 
@@ -74,8 +104,35 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
         SvcSoupBinTcpMessenger::<RecvP, SendP>::deserialize(frame)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for SvcSoupBinTcpProtocolManual<RecvP, SendP> {}
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for SvcSoupBinTcpProtocolManual<RecvP, SendP> {}
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for SvcSoupBinTcpProtocolIsConnected<RecvP, SendP> {
+    /// Will delegate to [`SvcSoupBinTcpRecvConnectionState::on_recv`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
+    #[inline(always)]
+    fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
+        #[cfg(debug_assertions)]
+        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+
+        (*self.recv_con_state.lock()).on_recv(msg);
+    }
+
+    /// Will delegate to [`SvcSoupBinTcpSendConnectionState::on_sent`]
+    #[allow(unused_variables)] // when compiled in release mode `who` is not used
+    #[inline(always)]
+    fn on_sent<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::SendT) {
+        #[cfg(debug_assertions)]
+        log::debug!("{}::on_sent: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+
+        (*self.send_con_state.lock()).on_sent(msg);
+    }
+    /// Will returns `true` if all of below are `true`
+    /// * [`crate::prelude::SvcSoupBinTcpRecvConnectionState::is_connected`]
+    /// * [`crate::prelude::SvcSoupBinTcpSendConnectionState::is_connected`]
+    #[inline(always)]
+    fn is_connected(&self) -> bool {
+        (*self.recv_con_state.lock()).is_connected() && (*self.send_con_state.lock()).is_connected()
+    }
+}
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for SvcSoupBinTcpProtocolIsConnected<RecvP, SendP> {}
 
 #[cfg(test)]
 #[cfg(feature = "unittest")]

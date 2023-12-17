@@ -18,7 +18,7 @@ mod test {
 
         let addr = setup::net::rand_avail_addr_port();
 
-        let mut svc = SvcSoupBinTcp::<_, _, 128>::bind(addr, NonZeroUsize::new(1).unwrap(), LoggerCallback::new_ref(), SvcSoupBinTcpProtocolManual::<Nil, Nil>::default(), Some("soupbintcp/unittest")).unwrap();
+        let mut svc = SvcSoupBinTcp::<_, _, 128>::bind(addr, NonZeroUsize::new(1).unwrap(), LoggerCallback::new_ref(), SvcSoupBinTcpProtocolIsConnected::<Nil, Nil>::default(), Some("soupbintcp/unittest")).unwrap();
         info!("svc: {}", svc);
 
         let mut clt = CltSoupBinTcp::<_, _, 128>::connect(
@@ -26,7 +26,7 @@ mod test {
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
             LoggerCallback::new_ref(),
-            CltSoupBinTcpProtocolManual::<Nil, Nil>::default(),
+            CltSoupBinTcpProtocolIsConnected::<Nil, Nil>::default(),
             Some("soupbintcp/unittest"),
         )
         .unwrap();
