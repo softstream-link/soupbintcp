@@ -25,7 +25,7 @@ impl SPayloadHeader {
     }
 }
 /// Sequenced Data Packet
-/// [SOUP TCP/IP Specification](./model/docs/soupbintcp_spec_4.0.pdf)  // TODO - update link to correct path
+/// [SOUP TCP/IP Specification](./model/docs/soupbintcp_spec_4.1.pdf)  // TODO - update link to correct path
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
 #[serde(from = "SPayloadJsonDesShadow<Payload>")]

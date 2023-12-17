@@ -1,12 +1,6 @@
 use crate::prelude::*;
 
-/// SoupBinTCP client that uses manual [CltSoupBinTcpProtocolManual] protocol.
-pub type CltSoupBinTcpManual<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Clt<CltSoupBinTcpProtocolManual<RecvP, SendP>, C, MAX_MSG_SIZE>;
-/// SoupBinTCP client that uses auto [CltSoupBinTcpProtocolAuto] protocol.
-pub type CltSoupBinTcpAuto<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Clt<CltSoupBinTcpProtocolAuto<RecvP, SendP>, C, MAX_MSG_SIZE>;
-
-// pub type CltSoupBinTcpRecver<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltRecver<CltSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
-// pub type CltSoupBinTcpSender<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltSender<CltSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
+pub type CltSoupBinTcp<P, C, const MAX_MSG_SIZE: usize> = Clt<P, C, MAX_MSG_SIZE>;
 
 #[cfg(test)]
 #[cfg(feature = "unittest")]
@@ -22,7 +16,7 @@ mod test {
 
         let addr = setup::net::rand_avail_addr_port();
 
-        let res = CltSoupBinTcpManual::<_, _, _, 128>::connect(
+        let res = CltSoupBinTcp::<_, _, 128>::connect(
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),

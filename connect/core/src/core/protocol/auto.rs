@@ -78,7 +78,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
         let mut msg = LoginRequest::new(self.username, self.password, self.session_id, self.sequence_number, self.max_hbeat_send_interval.into()).into();
         match con.send_busywait_timeout(&mut msg, self.on_connect_timeout)? {
             SendStatus::Completed => match con.recv_busywait_timeout(self.on_connect_timeout)? {
-                RecvStatus::Completed(Some(SvcSoupBinTcpMsg::LoginAccepted(msg))) => Ok(()), // TODO don't remove warning until dealt with LoginAccepted.SequenceNumber
+                RecvStatus::Completed(Some(SvcSoupBinTcpMsg::LoginAccepted(msg))) => Ok(()), // TODO don't remove warning until dealt with LoginAccepted.SequenceNumber need to add store for sent messages to be able to recover
                 RecvStatus::Completed(msg) => Err(Error::new(ErrorKind::Other, format!("Failed to login: {:?}", msg))),
                 RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Failed to receive login: {:?}", msg))),
             },
@@ -281,8 +281,8 @@ mod test {
         let login = LoginRequest::default();
         let mut svc = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(
             addr,
-            svc_clbk.clone(),
             NonZeroUsize::new(1).unwrap(),
+            svc_clbk.clone(),
             SvcProtocolAuto::new(login.username, login.password, login.session_id, on_connect_timeout, max_hbeat_interval),
             Some("soupbintcp/auth/unittest"),
         )

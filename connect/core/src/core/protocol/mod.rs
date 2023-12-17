@@ -62,6 +62,12 @@ pub struct SvcSoupBinTcpRecvConnectionState {
     any_msg_recved: Option<Instant>,
 }
 impl SvcSoupBinTcpRecvConnectionState {
+    fn new(max_recv_interval: Duration) -> Self {
+        Self {
+            max_recv_interval: Some(max_recv_interval),
+            any_msg_recved: None,
+        }
+    }
     fn update<RecvP: SoupBinTcpPayload<RecvP>>(&mut self, msg: &CltSoupBinTcpMsg<RecvP>) {
         use CltSoupBinTcpMsg::*;
         let now = Instant::now();

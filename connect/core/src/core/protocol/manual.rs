@@ -50,11 +50,21 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for CltSoupBinTcpProtocolManual<RecvP, SendP> {}
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct SvcSoupBinTcpProtocolManual<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
     recv_con_state: ProtocolState<SvcSoupBinTcpRecvConnectionState>,
     send_con_state: ProtocolState<SvcSoupBinTcpSendConnectionState>,
     phantom: PhantomData<(RecvP, SendP)>,
+}
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
+    fn default() -> Self {
+        let max_recv_interval = Duration::from_secs_f64(2.5);
+        Self {
+            recv_con_state: SvcSoupBinTcpRecvConnectionState::new(max_recv_interval).into(),
+            send_con_state: SvcSoupBinTcpSendConnectionState::default().into(),
+            phantom: PhantomData,
+        }
+    }
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
     #[inline(always)]
@@ -124,7 +134,7 @@ mod test {
         let svc_clbk = ChainCallback::new_ref(vec![svc_count.clone(), LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug)]);
         let addr = setup::net::rand_avail_addr_port();
 
-        let mut svc_sender = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, svc_clbk.clone(), NonZeroUsize::new(1).unwrap(), SvcProtocolManual::default(), Some("svc/soupbintcp/supervised"))
+        let mut svc_sender = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, NonZeroUsize::new(1).unwrap(), svc_clbk.clone(), SvcProtocolManual::default(), Some("svc/soupbintcp/supervised"))
             .unwrap()
             .into_sender_with_spawned_recver();
 
@@ -151,7 +161,6 @@ mod test {
 
         clt_sender.send_busywait_timeout(&mut LoginRequest::default().into(), timeout).unwrap().unwrap_completed();
         svc_sender.send_busywait_timeout(&mut LoginAccepted::default().into(), timeout).unwrap().unwrap_completed();
-
 
         assert!(clt_sender.is_connected_busywait_timeout(timeout));
         assert!(svc_sender.is_next_connected());

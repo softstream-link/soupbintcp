@@ -1,13 +1,6 @@
 use crate::prelude::*;
 
-pub type SvcSoupBinTcpManual<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Svc<SvcSoupBinTcpProtocolManual<RecvP, SendP>, C, MAX_MSG_SIZE>;
-pub type SvcSoupBinTcpAuto<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = Svc<SvcSoupBinTcpProtocolAuto<RecvP, SendP>, C, MAX_MSG_SIZE>;
-
-// pub type SvcSoupBinTcpAcceptorManual<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = SvcAcceptor<SvcSoupBinTcpProtocolManual<RecvP, SendP>, C, MAX_MSG_SIZE>;
-// pub type SvcSoupBinTcpAcceptorAuto<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = SvcAcceptor<SvcSoupBinTcpProtocolAuto<RecvP, SendP>, C, MAX_MSG_SIZE>;
-
-pub type SvcSoupBinTcpRecver<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltRecver<SvcSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
-pub type SvcSoupBinTcpSender<RecvP, SendP, C, const MAX_MSG_SIZE: usize> = CltSender<SvcSoupBinTcpMessenger<RecvP, SendP>, C, MAX_MSG_SIZE>;
+pub type SvcSoupBinTcp<P, C, const MAX_MSG_SIZE: usize> = Svc<P, C, MAX_MSG_SIZE>;
 
 #[cfg(test)]
 #[cfg(feature = "unittest")]
@@ -25,10 +18,10 @@ mod test {
 
         let addr = setup::net::rand_avail_addr_port();
 
-        let mut svc = SvcSoupBinTcpManual::<_, _, _, 128>::bind(addr, LoggerCallback::new_ref(), NonZeroUsize::new(1).unwrap(), SvcSoupBinTcpProtocolManual::<Nil, Nil>::default(), Some("soupbintcp/unittest")).unwrap();
+        let mut svc = SvcSoupBinTcp::<_, _, 128>::bind(addr, NonZeroUsize::new(1).unwrap(), LoggerCallback::new_ref(), SvcSoupBinTcpProtocolManual::<Nil, Nil>::default(), Some("soupbintcp/unittest")).unwrap();
         info!("svc: {}", svc);
 
-        let mut clt = CltSoupBinTcpManual::<_, _, _, 128>::connect(
+        let mut clt = CltSoupBinTcp::<_, _, 128>::connect(
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
