@@ -58,9 +58,8 @@ pub struct SvcSoupBinTcpProtocolManual<RecvP: SoupBinTcpPayload<RecvP>, SendP: S
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
     fn default() -> Self {
-        let max_recv_interval = Duration::from_secs_f64(2.5);
         Self {
-            recv_con_state: SvcSoupBinTcpRecvConnectionState::new(max_recv_interval).into(),
+            recv_con_state: SvcSoupBinTcpRecvConnectionState::default().into(),
             send_con_state: SvcSoupBinTcpSendConnectionState::default().into(),
             phantom: PhantomData,
         }
