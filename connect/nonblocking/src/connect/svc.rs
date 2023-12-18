@@ -2,6 +2,9 @@ use crate::prelude::*;
 
 pub type SvcSoupBinTcp<P, C, const MAX_MSG_SIZE: usize> = Svc<P, C, MAX_MSG_SIZE>;
 
+pub type SvcSoupBinTcpSender<P, C, const MAX_MSG_SIZE: usize> = SvcSender<P, C, MAX_MSG_SIZE>;
+pub type SvcSoupBinTcpSenderRef<P, C, const MAX_MSG_SIZE: usize> = SvcSenderRef<P, C, MAX_MSG_SIZE>;
+
 #[cfg(test)]
 #[cfg(feature = "unittest")]
 mod test {

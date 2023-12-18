@@ -4,7 +4,7 @@ use std::{fmt::Debug, io::Error, marker::PhantomData};
 /// Implements SoupBinTcp protocol for client side.
 ///
 /// # [ProtocolCore] Features
-/// * Not implemented - falls back to defaults, which are optimized away by compiler.
+/// * [`Self::is_connected`] - always returns `true`
 ///
 /// # [Protocol] Features
 /// * Not implemented - falls back to defaults, which are optimized away by compiler.
@@ -35,13 +35,17 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
         CltSoupBinTcpMessenger::<RecvP, SendP>::deserialize(frame)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for CltSoupBinTcpProtocolManual<RecvP, SendP> {}
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for CltSoupBinTcpProtocolManual<RecvP, SendP> {
+    fn is_connected(&self) -> bool {
+        true
+    }
+}
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for CltSoupBinTcpProtocolManual<RecvP, SendP> {}
 
 /// Implements SoupBinTcp protocol for server side.
 ///
 /// # [ProtocolCore] Features
-/// * Not implemented - falls back to defaults, which are optimized away by compiler.
+/// * [`Self::is_connected`] - always returns `true`
 ///
 /// # [Protocol] Features
 /// * Not implemented - falls back to defaults, which are optimized away by compiler.
@@ -74,7 +78,11 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
         SvcSoupBinTcpMessenger::<RecvP, SendP>::deserialize(frame)
     }
 }
-impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for SvcSoupBinTcpProtocolManual<RecvP, SendP> {}
+impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for SvcSoupBinTcpProtocolManual<RecvP, SendP> {
+    fn is_connected(&self) -> bool {
+        true
+    }
+}
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for SvcSoupBinTcpProtocolManual<RecvP, SendP> {}
 
 #[cfg(test)]
