@@ -73,7 +73,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for CltSoupBinTcpProtocolAuto<RecvP, SendP> {
     /// handles [LoginRequest]/[LoginAccepted][LoginRejected] authentication sequence
     #[inline(always)]
-    fn on_connect<C: SendNonBlocking<Self> + RecvNonBlocking<Self> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
+    fn on_connect<C: SendNonBlocking<Self::SendT> + RecvNonBlocking<Self::RecvT> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
         let mut msg = LoginRequest::new(self.username, self.password, self.session_id, self.sequence_number, self.max_hbeat_send_interval.into()).into();
         match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
             SendStatus::Completed => match con.recv_busywait_timeout(self.io_timeout)? {
@@ -110,7 +110,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 
     /// sends [CltHeartbeat] instance to the server
     #[inline(always)]
-    fn send_heart_beat<S: SendNonBlocking<Self> + ConnectionId>(&self, sender: &mut S) -> Result<SendStatus, Error> {
+    fn send_heart_beat<S: SendNonBlocking<Self::SendT> + ConnectionId>(&self, sender: &mut S) -> Result<SendStatus, Error> {
         sender.send(&mut CltSoupBinTcpMsg::hbeat())
     }
 }
@@ -183,7 +183,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for SvcSoupBinTcpProtocolAuto<RecvP, SendP> {
     /// handles [LoginRequest]/[LoginAccepted][LoginRejected] authentication sequence
     #[inline(always)]
-    fn on_connect<C: SendNonBlocking<Self> + RecvNonBlocking<Self> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
+    fn on_connect<C: SendNonBlocking<Self::SendT> + RecvNonBlocking<Self::RecvT> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
         match con.recv_busywait_timeout(self.io_timeout)? {
             RecvStatus::Completed(Some(CltSoupBinTcpMsg::Login(msg))) => {
                 if msg.username == self.username && msg.password == self.password && (msg.session_id == self.session_id || msg.session_id == SessionId::default()) {
@@ -246,7 +246,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
     }
     /// sends [SvcHeartbeat] instance to the client
     #[inline(always)]
-    fn send_heart_beat<S: SendNonBlocking<Self> + ConnectionId>(&self, sender: &mut S) -> Result<SendStatus, Error> {
+    fn send_heart_beat<S: SendNonBlocking<Self::SendT> + ConnectionId>(&self, sender: &mut S) -> Result<SendStatus, Error> {
         sender.send(&mut SvcSoupBinTcpMsg::hbeat())
     }
 }
