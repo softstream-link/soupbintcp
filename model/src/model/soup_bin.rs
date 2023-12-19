@@ -155,13 +155,13 @@ where
 {
     pub fn unwrap_clt_u(&self) -> &CltP {
         match self {
-            SoupBinTcpMsg::Clt(CltSoupBinTcpMsg::UPayload(UPayload { body, .. })) => body,
+            SoupBinTcpMsg::Clt(CltSoupBinTcpMsg::UPayload(UPayload { payload, .. })) => payload,
             _ => panic!("SoupBinTcp message is not Clt and/or UPayload, instead it is: {:?}", self),
         }
     }
     pub fn unwrap_svc_u(&self) -> &SvcP {
         match self {
-            SoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::UPayload(UPayload { body, .. })) => body,
+            SoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::UPayload(UPayload { payload, .. })) => payload,
             _ => panic!("SoupBinTcp message is not Svc and/or UPayload, instead it is: {:?}", self),
         }
     }

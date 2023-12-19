@@ -34,12 +34,12 @@ pub struct SPayload<Payload: SoupBinTcpPayload<Payload>> {
     header: SPayloadHeader,
     #[byteserde(deplete ( header.packet_length as usize - 1 ))]
     #[serde(flatten)]
-    body: Payload,
+    pub payload: Payload,
 }
 impl<Payload: SoupBinTcpPayload<Payload>> SPayload<Payload> {
-    pub fn new(body: Payload) -> SPayload<Payload> {
-        let header = SPayloadHeader::new((body.byte_len() + 1) as u16);
-        SPayload { header, body }
+    pub fn new(payload: Payload) -> SPayload<Payload> {
+        let header = SPayloadHeader::new((payload.byte_len() + 1) as u16);
+        SPayload { header, payload }
     }
 }
 
@@ -50,7 +50,7 @@ impl<Payload: SoupBinTcpPayload<Payload>> From<SPayloadJsonDesShadow<Payload>> f
     fn from(shadow: SPayloadJsonDesShadow<Payload>) -> Self {
         SPayload {
             header: SPayloadHeader::new((shadow.0.byte_len() + 1) as u16),
-            body: shadow.0,
+            payload: shadow.0,
         }
     }
 }
