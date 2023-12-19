@@ -22,7 +22,7 @@ pub struct CltSoupBinTcpProtocolAuto<RecvP: SoupBinTcpPayload<RecvP>, SendP: Sou
     password: Password,
     session_id: SessionId,
     sequence_number: SequenceNumber,
-    on_connect_timeout: Duration,
+    io_timeout: Duration,
     max_hbeat_send_interval: Duration,
     recv_con_state: ProtocolState<CltSoupBinTcpRecvConnectionState>,
     phantom: PhantomData<(RecvP, SendP)>,
@@ -35,16 +35,16 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBi
     /// * `password` - password to be used during authentication
     /// * `session_id` - session_id to be used during authentication
     /// * `sequence_num` - sequence_num that client wants to start receiving messages from
-    /// * `on_connect_timeout` - timeout for login sequence during [`Self::on_connect`] hook
+    /// * `io_timeout` - timeout for login sequence during [`Self::on_connect`] hook
     /// * `max_hbeat_interval_send` - maximum interval between sending heartbeats, will result in [Self::conf_heart_beat_interval] be 2.5 times faster, so if max is set to 250 seconds then heartbeats will be sent every 100 seconds
     /// * `max_hbeat_interval_recv` - maximum interval between receiving heartbeats, if exceeded [`Self::is_connected`] returns `false`
-    pub fn new(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, on_connect_timeout: Duration, max_hbeat_interval_send: Duration, max_hbeat_interval_recv: Duration) -> Self {
+    pub fn new(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, io_timeout: Duration, max_hbeat_interval_send: Duration, max_hbeat_interval_recv: Duration) -> Self {
         Self {
             username,
             password,
             session_id,
             sequence_number,
-            on_connect_timeout,
+            io_timeout,
             max_hbeat_send_interval: max_hbeat_interval_send,
             recv_con_state: CltSoupBinTcpRecvConnectionState::new(max_hbeat_interval_recv).into(),
             phantom: PhantomData,
@@ -75,8 +75,8 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
     #[inline(always)]
     fn on_connect<C: SendNonBlocking<Self> + RecvNonBlocking<Self> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
         let mut msg = LoginRequest::new(self.username, self.password, self.session_id, self.sequence_number, self.max_hbeat_send_interval.into()).into();
-        match con.send_busywait_timeout(&mut msg, self.on_connect_timeout)? {
-            SendStatus::Completed => match con.recv_busywait_timeout(self.on_connect_timeout)? {
+        match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
+            SendStatus::Completed => match con.recv_busywait_timeout(self.io_timeout)? {
                 RecvStatus::Completed(Some(SvcSoupBinTcpMsg::LoginAccepted(msg))) => Ok(()), // TODO don't remove warning until dealt with LoginAccepted.SequenceNumber need to add store for sent messages to be able to recover
                 RecvStatus::Completed(msg) => Err(Error::new(ErrorKind::Other, format!("Failed to login: {:?}", msg))),
                 RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Failed to receive login: {:?}", msg))),
@@ -132,7 +132,7 @@ pub struct SvcSoupBinTcpProtocolAuto<RecvP: SoupBinTcpPayload<RecvP>, SendP: Sou
     username: UserName,
     password: Password,
     session_id: SessionId,
-    on_connect_timeout: Duration,
+    io_timeout: Duration,
     max_hbeat_interval_send: Duration,
     recv_con_state: ProtocolState<SvcSoupBinTcpRecvConnectionState>,
     send_con_state: ProtocolState<SvcSoupBinTcpSendConnectionState>,
@@ -145,14 +145,14 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBi
     /// * `username` - username to be used during authentication
     /// * `password` - password to be used during authentication
     /// * `session_id` - session_id to be used during authentication
-    /// * `on_connect_timeout` - timeout for login sequence during [`Self::on_connect`] hook
+    /// * `io_timeout` - timeout for login sequence during [`Self::on_connect`] hook
     /// * `max_hbeat_interval_send` - maximum interval between sending heartbeats, will result in [Self::conf_heart_beat_interval] be 2.5 times faster, so if max is set to 250 seconds then heartbeats will be sent every 100 seconds
-    pub fn new(username: UserName, password: Password, session_id: SessionId, on_connect_timeout: Duration, max_hbeat_interval_send: Duration) -> Self {
+    pub fn new(username: UserName, password: Password, session_id: SessionId, io_timeout: Duration, max_hbeat_interval_send: Duration) -> Self {
         Self {
             username,
             password,
             session_id,
-            on_connect_timeout,
+            io_timeout,
             max_hbeat_interval_send,
             recv_con_state: SvcSoupBinTcpRecvConnectionState::default().into(),
             send_con_state: SvcSoupBinTcpSendConnectionState::default().into(),
@@ -184,25 +184,25 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
     /// handles [LoginRequest]/[LoginAccepted][LoginRejected] authentication sequence
     #[inline(always)]
     fn on_connect<C: SendNonBlocking<Self> + RecvNonBlocking<Self> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
-        match con.recv_busywait_timeout(self.on_connect_timeout)? {
+        match con.recv_busywait_timeout(self.io_timeout)? {
             RecvStatus::Completed(Some(CltSoupBinTcpMsg::Login(msg))) => {
                 if msg.username == self.username && msg.password == self.password && (msg.session_id == self.session_id || msg.session_id == SessionId::default()) {
                     // self.login_request.set(msg);
                     let mut msg = LoginAccepted::default().into();
-                    match con.send_busywait_timeout(&mut msg, self.on_connect_timeout)? {
+                    match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
                         SendStatus::Completed => Ok(()),
                         SendStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Failed to send login: {:?}", msg))),
                     }
                 } else if msg.session_id != self.session_id {
-                    con.send_busywait_timeout(&mut LoginRejected::session_not_available().into(), self.on_connect_timeout)?;
+                    con.send_busywait_timeout(&mut LoginRejected::session_not_available().into(), self.io_timeout)?;
                     Err(Error::new(ErrorKind::NotConnected, format!("Invalid session_id msg: {:?}", msg)))
                 } else {
-                    con.send_busywait_timeout(&mut LoginRejected::not_authorized().into(), self.on_connect_timeout)?;
+                    con.send_busywait_timeout(&mut LoginRejected::not_authorized().into(), self.io_timeout)?;
                     Err(Error::new(ErrorKind::NotConnected, format!("Not Authorized msg: {:?}", msg)))
                 }
             }
             RecvStatus::Completed(msg) => Err(Error::new(ErrorKind::Other, format!("Expected LoginRequest instead got msg:{:?}", msg))),
-            RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Did not get LoginRequest during timeout: {:?}", self.on_connect_timeout))),
+            RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Did not get LoginRequest during timeout: {:?}", self.io_timeout))),
         }
     }
     /// Will delegate to [`SvcSoupBinTcpRecvConnectionState::on_recv`]
@@ -236,7 +236,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
     /// * [EndOfSession] - the message to be sent to the client
     #[inline(always)]
     fn on_disconnect(&self) -> Option<(Duration, <Self as Messenger>::SendT)> {
-        Some((self.on_connect_timeout, EndOfSession::default().into()))
+        Some((self.io_timeout, EndOfSession::default().into()))
     }
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for SvcSoupBinTcpProtocolAuto<RecvP, SendP> {
@@ -271,7 +271,7 @@ mod test {
         const SOUP_BIN_MAX_FRAME_SIZE: usize = SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG;
         let addr = setup::net::rand_avail_addr_port();
         let max_hbeat_interval = Duration::from_secs_f64(2.5);
-        let on_connect_timeout = setup::net::default_connect_timeout();
+        let io_timeout = setup::net::default_connect_timeout();
 
         let clt_count = CounterCallback::new_ref();
         let svc_count = CounterCallback::new_ref();
@@ -283,7 +283,7 @@ mod test {
             addr,
             NonZeroUsize::new(1).unwrap(),
             svc_clbk.clone(),
-            SvcProtocolAuto::new(login.username, login.password, login.session_id, on_connect_timeout, max_hbeat_interval),
+            SvcProtocolAuto::new(login.username, login.password, login.session_id, io_timeout, max_hbeat_interval),
             Some("soupbintcp/auth/unittest"),
         )
         .unwrap()
@@ -293,7 +293,7 @@ mod test {
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
             clt_clbk.clone(),
-            CltProtocolAuto::new(login.username, login.password, login.session_id, login.sequence_number, on_connect_timeout, max_hbeat_interval, max_hbeat_interval),
+            CltProtocolAuto::new(login.username, login.password, login.session_id, login.sequence_number, io_timeout, max_hbeat_interval, max_hbeat_interval),
             Some("soupbintcp/auth/unittest"),
         )
         .unwrap()
