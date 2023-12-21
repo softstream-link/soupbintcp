@@ -145,7 +145,7 @@ pub struct SvcSoupBinTcpProtocolAuto<RecvP: SoupBinTcpPayload<RecvP>, SendP: Sou
     password: Password,
     session_id: SessionId,
     io_timeout: Duration,
-    max_hbeat_interval_send: Duration,
+    svc_max_hbeat_interval: Duration,
     recv_con_state: ProtocolConnectionState<SvcSoupBinTcpRecvConnectionState>,
     send_con_state: ProtocolConnectionState<SvcSoupBinTcpSendConnectionState>,
     send_ses_state: ProtocolSessionState<SvcSoupBinTcpSendSessionState<SendP, InMemoryMessageLog<SvcSoupBinTcpMsg<SendP>>>>, // TODO make generic to allow for file based message log
@@ -159,8 +159,8 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBi
     /// * `password` - password to be used during authentication
     /// * `session_id` - session_id to be used during authentication
     /// * `io_timeout` - timeout for login sequence during [`Self::on_connect`] hook
-    /// * `max_hbeat_interval_send` - maximum interval between sending heartbeats, will result in [`Self::conf_heart_beat_interval`] be 2.5 times faster, so if max is set to 250 seconds then heartbeats will be sent every 100 seconds
-    pub fn new(username: UserName, password: Password, session_id: SessionId, io_timeout: Duration, max_hbeat_interval_send: Duration) -> Self {
+    /// * `svc_max_hbeat_interval` - maximum interval between sending heartbeats, will result in [`Self::conf_heart_beat_interval`] be 2.5 times faster, so if max is set to 25 seconds then heartbeats will be sent every 10 seconds
+    pub fn new(username: UserName, password: Password, session_id: SessionId, io_timeout: Duration, svc_max_hbeat_interval: Duration) -> Self {
         let session_storage = InMemoryMessageLog::<SvcSoupBinTcpMsg<SendP>>::default();
         let session_state = SvcSoupBinTcpSendSessionState::new(session_storage);
         Self {
@@ -168,7 +168,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBi
             password,
             session_id,
             io_timeout,
-            max_hbeat_interval_send,
+            svc_max_hbeat_interval,
             recv_con_state: SvcSoupBinTcpRecvConnectionState::default().into(),
             send_con_state: SvcSoupBinTcpSendConnectionState::default().into(),
             send_ses_state: ProtocolSessionState::new(session_state),
@@ -289,7 +289,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for SvcSoupBinTcpProtocolAuto<RecvP, SendP> {
     #[inline(always)]
     fn conf_heart_beat_interval(&self) -> Option<Duration> {
-        Some(self.max_hbeat_interval_send.div_f64(2.5))
+        Some(self.svc_max_hbeat_interval.div_f64(2.5))
     }
     /// sends [SvcHeartbeat] instance to the client
     #[inline(always)]
