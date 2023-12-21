@@ -100,7 +100,7 @@ pub mod soupbintcp_field_types {
             setup::log::configure();
             let mut t: TimeoutMs = Duration::from_millis(1000).into();
             info!("Duration::from_millis: {}", t);
-            let d : Duration = t.into();
+            let d: Duration = t.into();
             info!("Duration: {:?}", d);
             t = 1000_u16.into();
 

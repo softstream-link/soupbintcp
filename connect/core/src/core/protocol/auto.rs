@@ -36,17 +36,17 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBi
     /// * `session_id` - session_id to be used during authentication
     /// * `sequence_num` - sequence_num that client wants to start receiving messages from
     /// * `io_timeout` - timeout for login sequence during [`Self::on_connect`] hook
-    /// * `max_hbeat_interval_send` - maximum interval between sending heartbeats, will result in [Self::conf_heart_beat_interval] be 2.5 times faster,
+    /// * `clt_max_hbeat_interval` - maximum interval between sending heartbeats, will result in [`Self::conf_heart_beat_interval`] be 2.5 times faster,
     /// so if max is set to 25 seconds then heartbeats will be sent every 10 seconds
-    /// * `max_hbeat_interval_recv` - maximum interval between receiving heartbeats, if exceeded [`Self::is_connected`] returns `false`
+    /// * `svc_max_hbeat_interval` - maximum interval between receiving heartbeats, if exceeded [`Self::is_connected`] returns `false`
     pub fn new(
         username: UserName,
         password: Password,
         session_id: SessionId,
         sequence_number: SequenceNumber,
         io_timeout: Duration,
-        max_hbeat_interval_send: Duration,
-        max_hbeat_interval_recv: Duration,
+        clt_max_hbeat_interval: Duration,
+        svc_max_hbeat_interval: Duration,
     ) -> Self {
         Self {
             username,
@@ -54,8 +54,8 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBi
             session_id,
             sequence_number,
             io_timeout,
-            max_hbeat_send_interval: max_hbeat_interval_send,
-            recv_con_state: CltSoupBinTcpRecvConnectionState::new(max_hbeat_interval_recv).into(),
+            max_hbeat_send_interval: clt_max_hbeat_interval,
+            recv_con_state: CltSoupBinTcpRecvConnectionState::new(svc_max_hbeat_interval).into(),
             phantom: PhantomData,
         }
     }
@@ -89,7 +89,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
         let mut msg = LoginRequest::new(self.username, self.password, self.session_id, self.sequence_number, self.max_hbeat_send_interval.into()).into();
         match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
             SendStatus::Completed => match con.recv_busywait_timeout(self.io_timeout)? {
-                RecvStatus::Completed(Some(SvcSoupBinTcpMsg::LoginAccepted(msg))) => Ok(()), // TODO don't remove warning until dealt with LoginAccepted.SequenceNumber need to add store for sent messages to be able to recover
+                RecvStatus::Completed(Some(SvcSoupBinTcpMsg::LoginAccepted(_msg))) => Ok(()),
                 RecvStatus::Completed(msg) => Err(Error::new(ErrorKind::Other, format!("Failed to login: {:?}", msg))),
                 RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Failed to receive login: {:?}", msg))),
             },

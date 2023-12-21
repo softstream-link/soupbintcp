@@ -9,20 +9,20 @@ use std::{
 };
 
 /// Helper to establish connection status of Clt, uses all recved messages to check.
-/// Confirms that last message received with in `max_recv_interval` duration.
+/// Confirms that last message received is with in `svc_max_recv_interval` [Duration].
 /// In addition, confirms that [LoginAccepted] was received and [EndOfSession] was not received.
 #[derive(Debug, Clone)]
 pub struct CltSoupBinTcpRecvConnectionState {
-    max_recv_interval: Duration,
+    svc_max_recv_interval: Duration,
     login_accepted: Option<Instant>,
     login_rejected: Option<Instant>,
     end_of_session: Option<Instant>,
     any_msg_recved: Option<Instant>,
 }
 impl CltSoupBinTcpRecvConnectionState {
-    pub fn new(max_recv_interval: Duration) -> Self {
+    pub fn new(svc_max_recv_interval: Duration) -> Self {
         Self {
-            max_recv_interval,
+            svc_max_recv_interval,
             login_accepted: None,
             login_rejected: None,
             end_of_session: None,
@@ -50,7 +50,7 @@ impl ConnectionStatus for CltSoupBinTcpRecvConnectionState {
     /// * [EndOfSession] was `NOT` received
     fn is_connected(&self) -> bool {
         match (self.login_accepted, self.any_msg_recved, self.login_rejected, self.end_of_session) {
-            (Some(_), Some(any_msg_recved), None, None) => any_msg_recved.elapsed() < self.max_recv_interval,
+            (Some(_), Some(any_msg_recved), None, None) => any_msg_recved.elapsed() < self.svc_max_recv_interval,
             _ => false,
         }
     }
