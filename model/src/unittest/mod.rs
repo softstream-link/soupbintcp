@@ -26,8 +26,8 @@ pub mod setup {
             vec![
                 CltSoupBinTcpMsg::HBeat(CltHeartbeat::default()),
                 CltSoupBinTcpMsg::Dbg(Debug::default()),
-                CltSoupBinTcpMsg::Login(LoginRequest::default()),
-                CltSoupBinTcpMsg::Logout(LogoutRequest::default()),
+                CltSoupBinTcpMsg::LoginRequest(LoginRequest::default()),
+                CltSoupBinTcpMsg::LogoutRequest(LogoutRequest::default()),
                 CltSoupBinTcpMsg::SPayload(SPayload::new(P::default())),
                 CltSoupBinTcpMsg::UPayload(UPayload::new(P::default())),
             ]

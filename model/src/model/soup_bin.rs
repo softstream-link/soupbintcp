@@ -20,9 +20,9 @@ pub enum CltSoupBinTcpMsg<Payload: SoupBinTcpPayload<Payload>> {
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
     Dbg(crate::model::debug::Debug),
     #[byteserde(eq(PacketTypeLoginRequest::as_slice()))]
-    Login(LoginRequest),
+    LoginRequest(LoginRequest),
     #[byteserde(eq(PacketTypeLogoutRequest::as_slice()))]
-    Logout(LogoutRequest),
+    LogoutRequest(LogoutRequest),
 }
 #[rustfmt::skip]
 impl<Payload: SoupBinTcpPayload<Payload>> CltSoupBinTcpMsg<Payload> {
@@ -31,7 +31,7 @@ impl<Payload: SoupBinTcpPayload<Payload>> CltSoupBinTcpMsg<Payload> {
     #[inline(always)]
     pub fn login(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, hbeat_timeout_ms: TimeoutMs) -> Self { LoginRequest::new(username, password, session_id, sequence_number, hbeat_timeout_ms).into() }
     #[inline(always)]
-    pub const fn logout() -> Self { Self::Logout(LogoutRequest::new()) }
+    pub const fn logout() -> Self { Self::LogoutRequest(LogoutRequest::new()) }
     #[inline(always)]
     pub fn dbg(text: &[u8]) -> Self { Debug::new(text).into() }
     #[inline(always)]
@@ -56,13 +56,13 @@ mod from_clt_msgs {
     impl<P: SoupBinTcpPayload<P>> From<LoginRequest> for CltSoupBinTcpMsg<P> {
         #[inline(always)]
         fn from(payload: LoginRequest) -> Self {
-            CltSoupBinTcpMsg::Login(payload)
+            CltSoupBinTcpMsg::LoginRequest(payload)
         }
     }
     impl<P: SoupBinTcpPayload<P>> From<LogoutRequest> for CltSoupBinTcpMsg<P> {
         #[inline(always)]
         fn from(payload: LogoutRequest) -> Self {
-            CltSoupBinTcpMsg::Logout(payload)
+            CltSoupBinTcpMsg::LogoutRequest(payload)
         }
     }
 }

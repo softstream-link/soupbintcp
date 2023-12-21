@@ -73,7 +73,7 @@ impl SvcSoupBinTcpRecvConnectionState {
     pub fn on_recv<RecvP: SoupBinTcpPayload<RecvP>>(&mut self, msg: &CltSoupBinTcpMsg<RecvP>) {
         use CltSoupBinTcpMsg::*;
         let now = Instant::now();
-        if let Login(msg) = msg {
+        if let LoginRequest(msg) = msg {
             self.max_recv_interval = Some(msg.hbeat_timeout_ms.into())
         }
         // match msg {

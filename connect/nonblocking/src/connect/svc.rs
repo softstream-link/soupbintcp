@@ -44,7 +44,7 @@ mod test {
         svc.accept_into_pool_busywait_timeout(setup::net::default_connect_timeout()).unwrap().unwrap_accepted();
         info!("svc: {}", svc);
 
-        let mut clt_msg = CltSoupBinTcpMsg::Login(LoginRequest::default());
+        let mut clt_msg = CltSoupBinTcpMsg::LoginRequest(LoginRequest::default());
         clt.send_busywait_timeout(&mut clt_msg, setup::net::default_connect_timeout()).unwrap().unwrap_completed();
 
         let svc_msg = svc.recv_busywait_timeout(setup::net::default_connect_timeout()).unwrap().unwrap_completed_some();

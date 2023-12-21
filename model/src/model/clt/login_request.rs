@@ -37,16 +37,15 @@ impl LoginRequest {
 }
 impl Debug for LoginRequest {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut obfuscated = self.clone();
-        obfuscated.password = b"********".as_slice().into(); // obfuscate password
+        let password = "********".to_owned();
         f.debug_struct("LoginRequest")
-            .field("packet_length", &obfuscated.packet_length)
-            .field("packet_type", &obfuscated.packet_type)
-            .field("username", &obfuscated.username)
-            .field("password", &obfuscated.password)
-            .field("session_id", &obfuscated.session_id)
-            .field("sequence_number", &obfuscated.sequence_number)
-            .field("hbeat_timeout", &obfuscated.hbeat_timeout_ms)
+            .field("packet_length", &self.packet_length)
+            .field("packet_type", &self.packet_type)
+            .field("username", &self.username)
+            .field("password", &password)
+            .field("session_id", &self.session_id)
+            .field("sequence_number", &self.sequence_number)
+            .field("hbeat_timeout", &self.hbeat_timeout_ms)
             .finish()
     }
 }

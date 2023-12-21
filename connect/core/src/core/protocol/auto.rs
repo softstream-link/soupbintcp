@@ -91,7 +91,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
             SendStatus::Completed => match con.recv_busywait_timeout(self.io_timeout)? {
                 RecvStatus::Completed(Some(SvcSoupBinTcpMsg::LoginAccepted(_msg))) => Ok(()),
                 RecvStatus::Completed(msg) => Err(Error::new(ErrorKind::Other, format!("Failed to login: {:?}", msg))),
-                RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Failed to receive login: {:?}", msg))),
+                RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Did not get LoginAccepted with io-timeout: {:?}", self.io_timeout))),
             },
             SendStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Failed to send login: {:?}", msg))),
         }
@@ -204,7 +204,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
         con: &mut C,
     ) -> Result<(), Error> {
         match con.recv_busywait_timeout(self.io_timeout)? {
-            RecvStatus::Completed(Some(CltSoupBinTcpMsg::Login(msg))) => {
+            RecvStatus::Completed(Some(CltSoupBinTcpMsg::LoginRequest(msg))) => {
                 if msg.username == self.username && msg.password == self.password && (msg.session_id == self.session_id || msg.session_id == SessionId::default()) {
                     let clt_next_sequenced_payload_number: usize = msg.sequence_number.into();
 
@@ -221,14 +221,14 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
                     match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
                         SendStatus::Completed => {
                             if effective_next_sequence_number < svc_next_sequenced_payload_number {
-                                for msg in (*self.send_ses_state.lock())
+                                for re_msg in (*self.send_ses_state.lock())
                                     .get_storage()
                                     .iter()
                                     .filter(|msg| matches!(msg, SvcSoupBinTcpMsg::SPayload(_)))
                                     .skip(effective_next_sequence_number - 1)
                                 {
-                                    if let SendStatus::WouldBlock = con.re_send_busywait_timeout(&msg, self.io_timeout)? {
-                                        return Err(Error::new(ErrorKind::TimedOut, format!("Failed to resend msg: {:?}", msg)));
+                                    if let SendStatus::WouldBlock = con.re_send_busywait_timeout(re_msg, self.io_timeout)? {
+                                        return Err(Error::new(ErrorKind::TimedOut, format!("Failed to resend msg: {:?}", re_msg)));
                                     }
                                 }
                             }
