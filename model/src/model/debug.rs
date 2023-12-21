@@ -6,7 +6,7 @@ use std::fmt;
 
 use super::types::PacketTypeDebug;
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, fmt::Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, fmt::Debug, Clone)]
 #[byteserde(endian = "be")]
 #[serde(from = "DebugJsonDesShadow")]
 pub struct Debug {

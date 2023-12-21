@@ -11,7 +11,7 @@ use std::{fmt::Debug, io::Error, marker::PhantomData, time::Duration};
 /// * Not implemented - falls back to defaults, which are optimized away by compiler.
 #[derive(Debug, Clone)]
 pub struct CltSoupBinTcpProtocolIsConnected<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
-    recv_con_state: ProtocolState<CltSoupBinTcpRecvConnectionState>,
+    recv_con_state: ProtocolConnectionState<CltSoupBinTcpRecvConnectionState>,
     phantom: PhantomData<(RecvP, SendP)>,
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for CltSoupBinTcpProtocolIsConnected<RecvP, SendP> {
@@ -71,8 +71,8 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 /// * Not implemented - falls back to defaults, which are optimized away by compiler.
 #[derive(Debug, Clone)]
 pub struct SvcSoupBinTcpProtocolIsConnected<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> {
-    recv_con_state: ProtocolState<SvcSoupBinTcpRecvConnectionState>,
-    send_con_state: ProtocolState<SvcSoupBinTcpSendConnectionState>,
+    recv_con_state: ProtocolConnectionState<SvcSoupBinTcpRecvConnectionState>,
+    send_con_state: ProtocolConnectionState<SvcSoupBinTcpSendConnectionState>,
     phantom: PhantomData<(RecvP, SendP)>,
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for SvcSoupBinTcpProtocolIsConnected<RecvP, SendP> {

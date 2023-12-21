@@ -7,7 +7,7 @@ use crate::model::types::PacketTypeLogoutRequest;
 pub const LOGOUT_REQUEST_PACKET_LENGTH: u16 = 1;
 pub const LOGOUT_REQUEST_BYTE_LEN: usize = LOGOUT_REQUEST_PACKET_LENGTH as usize + 2;
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone, Copy)]
 #[byteserde(endian = "be")]
 pub struct LogoutRequest {
     #[serde(default = "default_packet_length", skip_serializing)]

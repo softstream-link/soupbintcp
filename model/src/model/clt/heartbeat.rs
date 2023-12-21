@@ -7,7 +7,7 @@ use crate::model::types::PacketTypeCltHeartbeat;
 pub const CLIENT_HEARTBEAT_PACKET_LENGTH: u16 = 1;
 pub const CLIENT_HEARTBEAT_BYTE_LEN: usize = CLIENT_HEARTBEAT_PACKET_LENGTH as usize + 2;
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone, Copy)]
 #[byteserde(endian = "be")]
 pub struct CltHeartbeat {
     #[serde(default = "default_packet_length", skip_serializing)]

@@ -2,7 +2,7 @@ use crate::prelude::{SoupBinTcpPayload, UPayload};
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
 use serde::{Deserialize, Serialize};
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug, Default)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone, Copy, Default)]
 pub struct Nil;
 impl Default for UPayload<Nil> {
     fn default() -> Self {
@@ -11,7 +11,7 @@ impl Default for UPayload<Nil> {
 }
 impl SoupBinTcpPayload<Nil> for Nil {}
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug, Default)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
 pub struct VecPayload {
     pub payload: Vec<u8>,
 }

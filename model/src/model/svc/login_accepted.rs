@@ -6,7 +6,7 @@ use crate::model::types::{PacketTypeLoginAccepted, SequenceNumber, SessionId};
 
 pub const LOGIN_ACCEPTED_PACKET_LENGTH: u16 = 31; // packet_type/1 + session/10 + sequence_number/20
 pub const LOGIN_ACCEPTED_BYTE_LEN: usize = LOGIN_ACCEPTED_PACKET_LENGTH as usize + 2;
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone, Copy)]
 #[byteserde(endian = "be")]
 pub struct LoginAccepted {
     #[serde(default = "default_packet_length", skip_serializing)]
@@ -26,6 +26,7 @@ impl LoginAccepted {
         }
     }
 }
+#[cfg(feature = "unittest")]
 impl Default for LoginAccepted {
     fn default() -> Self {
         LoginAccepted {

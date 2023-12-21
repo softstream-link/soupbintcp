@@ -24,7 +24,7 @@ pub struct CltSoupBinTcpProtocolAuto<RecvP: SoupBinTcpPayload<RecvP>, SendP: Sou
     sequence_number: SequenceNumber,
     io_timeout: Duration,
     max_hbeat_send_interval: Duration,
-    recv_con_state: ProtocolState<CltSoupBinTcpRecvConnectionState>,
+    recv_con_state: ProtocolConnectionState<CltSoupBinTcpRecvConnectionState>,
     phantom: PhantomData<(RecvP, SendP)>,
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBinTcpProtocolAuto<RecvP, SendP> {
@@ -36,9 +36,18 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBi
     /// * `session_id` - session_id to be used during authentication
     /// * `sequence_num` - sequence_num that client wants to start receiving messages from
     /// * `io_timeout` - timeout for login sequence during [`Self::on_connect`] hook
-    /// * `max_hbeat_interval_send` - maximum interval between sending heartbeats, will result in [Self::conf_heart_beat_interval] be 2.5 times faster, so if max is set to 250 seconds then heartbeats will be sent every 100 seconds
+    /// * `max_hbeat_interval_send` - maximum interval between sending heartbeats, will result in [Self::conf_heart_beat_interval] be 2.5 times faster,
+    /// so if max is set to 25 seconds then heartbeats will be sent every 10 seconds
     /// * `max_hbeat_interval_recv` - maximum interval between receiving heartbeats, if exceeded [`Self::is_connected`] returns `false`
-    pub fn new(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, io_timeout: Duration, max_hbeat_interval_send: Duration, max_hbeat_interval_recv: Duration) -> Self {
+    pub fn new(
+        username: UserName,
+        password: Password,
+        session_id: SessionId,
+        sequence_number: SequenceNumber,
+        io_timeout: Duration,
+        max_hbeat_interval_send: Duration,
+        max_hbeat_interval_recv: Duration,
+    ) -> Self {
         Self {
             username,
             password,
@@ -73,7 +82,10 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for CltSoupBinTcpProtocolAuto<RecvP, SendP> {
     /// handles [LoginRequest]/[LoginAccepted][LoginRejected] authentication sequence
     #[inline(always)]
-    fn on_connect<C: SendNonBlocking<Self::SendT> + RecvNonBlocking<Self::RecvT> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
+    fn on_connect<C: SendNonBlocking<<Self as Messenger>::SendT> + ReSendNonBlocking<<Self as Messenger>::SendT> + RecvNonBlocking<<Self as Messenger>::RecvT> + ConnectionId>(
+        &self,
+        con: &mut C,
+    ) -> Result<(), Error> {
         let mut msg = LoginRequest::new(self.username, self.password, self.session_id, self.sequence_number, self.max_hbeat_send_interval.into()).into();
         match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
             SendStatus::Completed => match con.recv_busywait_timeout(self.io_timeout)? {
@@ -134,8 +146,9 @@ pub struct SvcSoupBinTcpProtocolAuto<RecvP: SoupBinTcpPayload<RecvP>, SendP: Sou
     session_id: SessionId,
     io_timeout: Duration,
     max_hbeat_interval_send: Duration,
-    recv_con_state: ProtocolState<SvcSoupBinTcpRecvConnectionState>,
-    send_con_state: ProtocolState<SvcSoupBinTcpSendConnectionState>,
+    recv_con_state: ProtocolConnectionState<SvcSoupBinTcpRecvConnectionState>,
+    send_con_state: ProtocolConnectionState<SvcSoupBinTcpSendConnectionState>,
+    send_ses_state: ProtocolSessionState<SvcSoupBinTcpSendSessionState<SendP, InMemoryMessageLog<SvcSoupBinTcpMsg<SendP>>>>, // TODO make generic to allow for file based message log
     phantom: PhantomData<(RecvP, SendP)>,
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBinTcpProtocolAuto<RecvP, SendP> {
@@ -146,8 +159,10 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBi
     /// * `password` - password to be used during authentication
     /// * `session_id` - session_id to be used during authentication
     /// * `io_timeout` - timeout for login sequence during [`Self::on_connect`] hook
-    /// * `max_hbeat_interval_send` - maximum interval between sending heartbeats, will result in [Self::conf_heart_beat_interval] be 2.5 times faster, so if max is set to 250 seconds then heartbeats will be sent every 100 seconds
+    /// * `max_hbeat_interval_send` - maximum interval between sending heartbeats, will result in [`Self::conf_heart_beat_interval`] be 2.5 times faster, so if max is set to 250 seconds then heartbeats will be sent every 100 seconds
     pub fn new(username: UserName, password: Password, session_id: SessionId, io_timeout: Duration, max_hbeat_interval_send: Duration) -> Self {
+        let session_storage = InMemoryMessageLog::<SvcSoupBinTcpMsg<SendP>>::default();
+        let session_state = SvcSoupBinTcpSendSessionState::new(session_storage);
         Self {
             username,
             password,
@@ -156,6 +171,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBi
             max_hbeat_interval_send,
             recv_con_state: SvcSoupBinTcpRecvConnectionState::default().into(),
             send_con_state: SvcSoupBinTcpSendConnectionState::default().into(),
+            send_ses_state: ProtocolSessionState::new(session_state),
             phantom: PhantomData,
         }
     }
@@ -183,19 +199,49 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Messenger
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolCore for SvcSoupBinTcpProtocolAuto<RecvP, SendP> {
     /// handles [LoginRequest]/[LoginAccepted][LoginRejected] authentication sequence
     #[inline(always)]
-    fn on_connect<C: SendNonBlocking<Self::SendT> + RecvNonBlocking<Self::RecvT> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
+    fn on_connect<C: SendNonBlocking<<Self as Messenger>::SendT> + ReSendNonBlocking<<Self as Messenger>::SendT> + RecvNonBlocking<<Self as Messenger>::RecvT> + ConnectionId>(
+        &self,
+        con: &mut C,
+    ) -> Result<(), Error> {
         match con.recv_busywait_timeout(self.io_timeout)? {
             RecvStatus::Completed(Some(CltSoupBinTcpMsg::Login(msg))) => {
                 if msg.username == self.username && msg.password == self.password && (msg.session_id == self.session_id || msg.session_id == SessionId::default()) {
-                    // self.login_request.set(msg);
-                    let mut msg = LoginAccepted::default().into();
+                    let clt_next_sequenced_payload_number: usize = msg.sequence_number.into();
+
+                    let svc_next_sequenced_payload_number = (*self.send_ses_state.lock()).next_sequenced_payload_number();
+                    let effective_next_sequence_number = {
+                        if clt_next_sequenced_payload_number == 0 {
+                            svc_next_sequenced_payload_number
+                        } else {
+                            clt_next_sequenced_payload_number
+                        }
+                    };
+
+                    let mut msg = LoginAccepted::new(self.session_id, effective_next_sequence_number.into()).into();
                     match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
-                        SendStatus::Completed => Ok(()),
+                        SendStatus::Completed => {
+                            if effective_next_sequence_number < svc_next_sequenced_payload_number {
+                                for msg in (*self.send_ses_state.lock())
+                                    .get_storage()
+                                    .iter()
+                                    .filter(|msg| matches!(msg, SvcSoupBinTcpMsg::SPayload(_)))
+                                    .skip(effective_next_sequence_number - 1)
+                                {
+                                    if let SendStatus::WouldBlock = con.re_send_busywait_timeout(&msg, self.io_timeout)? {
+                                        return Err(Error::new(ErrorKind::TimedOut, format!("Failed to resend msg: {:?}", msg)));
+                                    }
+                                }
+                            }
+                            Ok(())
+                        }
                         SendStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Failed to send login: {:?}", msg))),
                     }
                 } else if msg.session_id != self.session_id {
                     con.send_busywait_timeout(&mut LoginRejected::session_not_available().into(), self.io_timeout)?;
-                    Err(Error::new(ErrorKind::NotConnected, format!("Invalid session_id msg: {:?}", msg)))
+                    Err(Error::new(
+                        ErrorKind::NotConnected,
+                        format!("Invalid session_id expected: {:?} received: {:?}", self.session_id, msg.session_id),
+                    ))
                 } else {
                     con.send_busywait_timeout(&mut LoginRejected::not_authorized().into(), self.io_timeout)?;
                     Err(Error::new(ErrorKind::NotConnected, format!("Not Authorized msg: {:?}", msg)))
@@ -222,6 +268,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
         log::debug!("{}::on_sent: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolAuto", Self), who.con_id(), msg);
 
         (*self.send_con_state.lock()).on_sent(msg);
+        (*self.send_ses_state.lock()).on_sent(msg);
     }
 
     /// Will returns `true` if all of below are `true`
@@ -256,12 +303,13 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 mod test {
 
     use crate::prelude::*;
-    use std::{num::NonZeroUsize, thread::sleep, time::Duration};
+    use std::{num::NonZeroUsize, time::Duration};
 
     use links_core::unittest::setup;
     use log::info;
     type CltProtocolAuto = CltSoupBinTcpProtocolAuto<SamplePayload, SamplePayload>;
     type SvcProtocolAuto = SvcSoupBinTcpProtocolAuto<SamplePayload, SamplePayload>;
+    type UnitMsg = UniSoupBinTcpMsg<SamplePayload, SamplePayload>;
 
     #[test]
     fn test_protocol() {
@@ -270,47 +318,75 @@ mod test {
 
         const SOUP_BIN_MAX_FRAME_SIZE: usize = SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG;
         let addr = setup::net::rand_avail_addr_port();
-        let max_hbeat_interval = Duration::from_secs_f64(2.5);
-        let io_timeout = setup::net::default_connect_timeout();
+        let username: UserName = b"userid".as_slice().into();
+        let password: Password = b"passwd".as_slice().into();
+        let session_id: SessionId = b"favsession".as_slice().into();
+        let io_timeout = setup::net::default_io_timeout();
 
+        let max_hbeat_interval_send = Duration::from_secs_f64(2.5);
+        let max_hbeat_interval_recv = max_hbeat_interval_send;
+
+        let clt_store = CanonicalEntryStore::<UnitMsg>::new_ref();
+        let svc_store = CanonicalEntryStore::<UnitMsg>::new_ref();
         let clt_count = CounterCallback::new_ref();
         let svc_count = CounterCallback::new_ref();
-        let clt_clbk = ChainCallback::new_ref(vec![clt_count.clone(), LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug)]);
-        let svc_clbk = ChainCallback::new_ref(vec![svc_count.clone(), LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug)]);
+        let clt_clbk = ChainCallback::new_ref(vec![
+            StoreCallback::new_ref(clt_store.clone()),
+            clt_count.clone(),
+            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug),
+        ]);
+        let svc_clbk = ChainCallback::new_ref(vec![
+            StoreCallback::new_ref(svc_store.clone()),
+            svc_count.clone(),
+            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug),
+        ]);
 
-        let login = LoginRequest::default();
-        let mut svc = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(
-            addr,
-            NonZeroUsize::new(1).unwrap(),
-            svc_clbk.clone(),
-            SvcProtocolAuto::new(login.username, login.password, login.session_id, io_timeout, max_hbeat_interval),
-            Some("soupbintcp/auth/unittest"),
-        )
-        .unwrap()
-        .into_sender_with_spawned_recver_ref();
+        let protocol = SvcProtocolAuto::new(username, password, session_id, io_timeout, max_hbeat_interval_send);
+        let mut svc = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, NonZeroUsize::new(1).unwrap(), svc_clbk.clone(), protocol, Some("svc/soupbintcp/auto"))
+            .unwrap()
+            .into_sender_with_spawned_recver_ref();
+
+        let sequence_number: SequenceNumber = 0_u64.into();
+        let protocol = CltProtocolAuto::new(username, password, session_id, sequence_number, io_timeout, max_hbeat_interval_send, max_hbeat_interval_recv);
         let clt = Clt::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::connect(
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
             clt_clbk.clone(),
-            CltProtocolAuto::new(login.username, login.password, login.session_id, login.sequence_number, io_timeout, max_hbeat_interval, max_hbeat_interval),
-            Some("soupbintcp/auth/unittest"),
+            protocol,
+            Some("clt/soupbintcp/auto"),
         )
         .unwrap()
         .into_sender_with_spawned_recver_ref();
 
-        // Connection established
+        // Connection established LoginAccepted received and within hbeat_interval_recv, hence connection is valid
         info!("clt.is_connected(): {:?}", clt.is_connected());
         assert!(clt.is_connected());
         info!("svc.all_connected(): {:?}", svc.all_connected());
         assert!(svc.all_connected());
 
-        sleep(Duration::from_millis(100)); // wait for just the first hbeat to be sent
+        clt_store
+            .find_recv(
+                "clt/soupbintcp/auto",
+                |msg| matches!(msg, UniSoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::HBeat(_))),
+                setup::net::optional_find_timeout().into(),
+            )
+            .unwrap();
+        svc_store
+            .find_recv(
+                "svc/soupbintcp/auto",
+                |msg| matches!(msg, UniSoupBinTcpMsg::Clt(CltSoupBinTcpMsg::HBeat(_))),
+                setup::net::optional_find_timeout().into(),
+            )
+            .unwrap();
 
-        // this indicates client sent login request & one hbeat
-        assert_eq!(clt_count.sent_count(), 2);
-        // this indicates server sent login accepted & one hbeat
-        assert_eq!(svc_count.sent_count(), 2);
+        const HAND_SHAKE_COUNT: usize = 2; // clt login request & one hbeat | svc login accepted & one hbeat
+
+        assert_eq!(clt_count.sent_count(), HAND_SHAKE_COUNT); // this indicates client sent login request & one hbeat
+        assert_eq!(svc_count.sent_count(), HAND_SHAKE_COUNT); // this indicates server sent login accepted & one hbeat
+
+        assert_eq!(clt_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::find_timeout()), HAND_SHAKE_COUNT); // this indicates client recv login request & one hbeat
+        assert_eq!(svc_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::find_timeout()), HAND_SHAKE_COUNT); // this indicates server recv login accepted & one hbeat
 
         // Connection still valid after hbeats
         info!("clt.is_connected(): {:?}", clt.is_connected());
@@ -318,13 +394,95 @@ mod test {
         info!("svc.all_connected(): {:?}", svc.all_connected());
         assert!(svc.all_connected());
 
-        drop(svc);
-        assert_eq!(svc_count.sent_count(), 3);
-        sleep(Duration::from_millis(100)); // wait for just the End of Session
-        assert_eq!(clt_count.recv_count(), 3);
+        const N_SEQUENCED_PAYLOADS: usize = 10;
+        const N_UN_SEQUENCED_PAYLOADS: usize = 10;
+        let mut un_sequenced_msg = SvcSoupBinTcpMsg::udata(SamplePayload::default());
+        for _ in 1..=N_UN_SEQUENCED_PAYLOADS {
+            svc.send_busywait_timeout(&mut un_sequenced_msg, io_timeout).unwrap().unwrap_completed();
+        }
+        for i in 1..=N_SEQUENCED_PAYLOADS {
+            let payload = SamplePayload::new(format!("#{} SPayload", i).as_bytes().into());
+            let mut sequenced_msg = SvcSoupBinTcpMsg::sdata(payload);
+            svc.send_busywait_timeout(&mut sequenced_msg, io_timeout).unwrap().unwrap_completed();
+        }
 
-        // Connection no longer valid on clt
-        info!("clt.is_connected(): {:?}", clt.is_connected());
-        assert!(!clt.is_connected());
+        assert_eq!(svc_count.sent_count(), HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS + N_UN_SEQUENCED_PAYLOADS); // this indicates server sent login accepted & one hbeat + N_SEQUENCED_PAYLOADS which are now in the internal session cache
+        assert_eq!(
+            clt_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS + N_UN_SEQUENCED_PAYLOADS, setup::net::optional_find_timeout().unwrap()),
+            HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS + N_UN_SEQUENCED_PAYLOADS
+        );
+        info!("clt_count: {}", clt_count);
+        info!("svc_count: {}", svc_count);
+
+        drop(clt);
+
+        // reconnect
+        let clt_store_reconnect = CanonicalEntryStore::<UnitMsg>::new_ref();
+        let clt_count_reconnect = CounterCallback::new_ref();
+        let clt_clbk_reconnect = ChainCallback::new_ref(vec![
+            StoreCallback::new_ref(clt_store_reconnect.clone()),
+            clt_count_reconnect.clone(),
+            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug),
+        ]);
+        let reconnect_sequence_number = 6_usize;
+        let protocol_reconnect = CltProtocolAuto::new(
+            username,
+            password,
+            session_id,
+            reconnect_sequence_number.into(),
+            io_timeout,
+            max_hbeat_interval_send,
+            max_hbeat_interval_recv,
+        );
+        let clt_reconnect = Clt::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::connect(
+            addr,
+            setup::net::default_connect_timeout(),
+            setup::net::default_connect_retry_after(),
+            clt_clbk_reconnect.clone(),
+            protocol_reconnect,
+            Some("clt_reconnect/soupbintcp/auto"),
+        )
+        .unwrap()
+        .into_sender_with_spawned_recver_ref();
+
+        assert!(clt_reconnect.is_connected());
+        info!("svc_count: {}", svc_count);
+        let clt_reconnect_expected_recv = HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS - reconnect_sequence_number + 1;
+        info!("clt_count_reconnect: {}", clt_count_reconnect);
+        assert_eq!(
+            clt_count_reconnect.recv_count_busywait_timeout(clt_reconnect_expected_recv, setup::net::find_timeout()),
+            clt_reconnect_expected_recv
+        );
+        info!("clt_count_reconnect: {}", clt_count_reconnect);
+
+        let found = clt_store_reconnect.find_recv(
+            "clt_reconnect/soupbintcp/auto",
+            |msg| {
+                matches!(
+                    msg,
+                    UniSoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::SPayload(SPayload {
+                        payload ,
+                        ..
+                    }) ) if payload == &SamplePayload::new(format!("#{} SPayload", 10).as_bytes().into()) // last resent SPayload
+                )
+            },
+            setup::net::optional_find_timeout().into(),
+        );
+
+        info!("found: {:?}", found);
+        assert!(found.is_some());
+        // info!("clt_store_reconnect: {}", clt_store_reconnect);
+
+        drop(svc);
+
+        let found = clt_store_reconnect.find_recv(
+            "clt_reconnect/soupbintcp/auto",
+            |msg| matches!(msg, UniSoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::EndOfSession(_))),
+            setup::net::optional_find_timeout().into(),
+        );
+        info!("found: {:?}", found);
+        assert!(found.is_some());
+
+        assert!(!clt_reconnect.is_connected());
     }
 }

@@ -9,11 +9,10 @@ pub type SvcSoupBinTcpSenderRef<P, C, const MAX_MSG_SIZE: usize> = SvcSenderRef<
 #[cfg(feature = "unittest")]
 mod test {
 
-    use std::num::NonZeroUsize;
-
     use crate::prelude::*;
     use links_core::unittest::setup;
     use log::info;
+    use std::num::NonZeroUsize;
 
     #[test]
     fn test_clt_svc_connected() {
@@ -21,7 +20,14 @@ mod test {
 
         let addr = setup::net::rand_avail_addr_port();
 
-        let mut svc = SvcSoupBinTcp::<_, _, 128>::bind(addr, NonZeroUsize::new(1).unwrap(), LoggerCallback::new_ref(), SvcSoupBinTcpProtocolIsConnected::<Nil, Nil>::default(), Some("soupbintcp/unittest")).unwrap();
+        let mut svc = SvcSoupBinTcp::<_, _, 128>::bind(
+            addr,
+            NonZeroUsize::new(1).unwrap(),
+            LoggerCallback::new_ref(),
+            SvcSoupBinTcpProtocolIsConnected::<Nil, Nil>::default(),
+            Some("soupbintcp/unittest"),
+        )
+        .unwrap();
         info!("svc: {}", svc);
 
         let mut clt = CltSoupBinTcp::<_, _, 128>::connect(

@@ -29,6 +29,7 @@ impl CltSoupBinTcpRecvConnectionState {
             any_msg_recved: None,
         }
     }
+    #[inline(always)]
     pub fn on_recv<RecvP: SoupBinTcpPayload<RecvP>>(&mut self, msg: &SvcSoupBinTcpMsg<RecvP>) {
         use SvcSoupBinTcpMsg::*;
         let now = Instant::now();
@@ -54,9 +55,9 @@ impl ConnectionStatus for CltSoupBinTcpRecvConnectionState {
         }
     }
 }
-impl From<CltSoupBinTcpRecvConnectionState> for ProtocolState<CltSoupBinTcpRecvConnectionState> {
+impl From<CltSoupBinTcpRecvConnectionState> for ProtocolConnectionState<CltSoupBinTcpRecvConnectionState> {
     fn from(state: CltSoupBinTcpRecvConnectionState) -> Self {
-        ProtocolState::new(state)
+        ProtocolConnectionState::new(state)
     }
 }
 
@@ -68,6 +69,7 @@ pub struct SvcSoupBinTcpRecvConnectionState {
     any_msg_recved: Option<Instant>,
 }
 impl SvcSoupBinTcpRecvConnectionState {
+    #[inline(always)]
     pub fn on_recv<RecvP: SoupBinTcpPayload<RecvP>>(&mut self, msg: &CltSoupBinTcpMsg<RecvP>) {
         use CltSoupBinTcpMsg::*;
         let now = Instant::now();
@@ -93,9 +95,9 @@ impl ConnectionStatus for SvcSoupBinTcpRecvConnectionState {
         }
     }
 }
-impl From<SvcSoupBinTcpRecvConnectionState> for ProtocolState<SvcSoupBinTcpRecvConnectionState> {
+impl From<SvcSoupBinTcpRecvConnectionState> for ProtocolConnectionState<SvcSoupBinTcpRecvConnectionState> {
     fn from(state: SvcSoupBinTcpRecvConnectionState) -> Self {
-        ProtocolState::new(state)
+        ProtocolConnectionState::new(state)
     }
 }
 
@@ -107,6 +109,7 @@ pub struct SvcSoupBinTcpSendConnectionState {
     end_of_session: Option<Instant>,
 }
 impl SvcSoupBinTcpSendConnectionState {
+    #[inline(always)]
     pub fn on_sent<SendP: SoupBinTcpPayload<SendP>>(&mut self, msg: &SvcSoupBinTcpMsg<SendP>) {
         use SvcSoupBinTcpMsg::*;
         let now = Instant::now();
@@ -125,8 +128,43 @@ impl ConnectionStatus for SvcSoupBinTcpSendConnectionState {
         matches!((self.login_accepted, self.end_of_session), (Some(_), None))
     }
 }
-impl From<SvcSoupBinTcpSendConnectionState> for ProtocolState<SvcSoupBinTcpSendConnectionState> {
+impl From<SvcSoupBinTcpSendConnectionState> for ProtocolConnectionState<SvcSoupBinTcpSendConnectionState> {
     fn from(state: SvcSoupBinTcpSendConnectionState) -> Self {
-        ProtocolState::new(state)
+        ProtocolConnectionState::new(state)
     }
 }
+
+#[derive(Debug)]
+pub struct SvcSoupBinTcpSendSessionState<SendP: SoupBinTcpPayload<SendP>, Storage: ProtocolStorage<Item = SvcSoupBinTcpMsg<SendP>>> {
+    sequenced_payload_number: usize,
+    storage: Storage,
+}
+impl<SendP: SoupBinTcpPayload<SendP>, Storage: ProtocolStorage<Item = SvcSoupBinTcpMsg<SendP>>> SvcSoupBinTcpSendSessionState<SendP, Storage> {
+    pub fn new(storage: Storage) -> Self {
+        Self { sequenced_payload_number: 0, storage }
+    }
+    #[inline(always)]
+    pub fn on_sent(&mut self, msg: &SvcSoupBinTcpMsg<SendP>) {
+        if let SvcSoupBinTcpMsg::SPayload(_) = msg {
+            self.sequenced_payload_number += 1;
+        }
+        self.storage.store(msg.clone());
+    }
+    #[inline(always)]
+    pub fn current_sequence_payload_number(&self) -> usize {
+        self.sequenced_payload_number
+    }
+    #[inline(always)]
+    pub fn next_sequenced_payload_number(&self) -> usize {
+        self.sequenced_payload_number + 1
+    }
+    #[inline(always)]
+    pub fn get_storage(&self) -> &Storage {
+        &self.storage
+    }
+}
+// impl<SendP: SoupBinTcpPayload<SendP>,  Storage: ProtocolStorage<Item = SvcSoupBinTcpMsg<SendP>> > From<SvcSoupBinTcpSendSessionState<SendP, Storage> for ProtocolSessionState<SvcSoupBinTcpSendSessionState<SendP, Storage>> {
+//     fn from(state: SvcSoupBinTcpSendSessionState<SendP, Storage>) -> Self {
+//         ProtocolSessionState::new(state)
+//     }
+// }

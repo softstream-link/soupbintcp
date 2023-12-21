@@ -2,7 +2,7 @@ use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedL
 use byteserde_types::string_ascii_fixed;
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::{SoupBinTcpPayload, UPayload};
+use crate::prelude::{SPayload, SoupBinTcpPayload, UPayload};
 
 string_ascii_fixed!(Context1, 10, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
 string_ascii_fixed!(Context2, 10, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
@@ -13,8 +13,12 @@ pub struct SamplePayload {
     pub context1: Context1,
     pub context2: Context2,
 }
+impl SamplePayload {
+    pub fn new(context1: Context1) -> Self {
+        Self { context1, ..Default::default() }
+    }
+}
 impl SoupBinTcpPayload<SamplePayload> for SamplePayload {}
-
 impl Default for SamplePayload {
     fn default() -> Self {
         Self {
@@ -26,5 +30,10 @@ impl Default for SamplePayload {
 impl Default for UPayload<SamplePayload> {
     fn default() -> Self {
         UPayload::new(SamplePayload::default())
+    }
+}
+impl Default for SPayload<SamplePayload> {
+    fn default() -> Self {
+        SPayload::new(SamplePayload::default())
     }
 }

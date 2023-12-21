@@ -90,12 +90,11 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 mod test {
 
     use crate::prelude::*;
-    use std::num::NonZeroUsize;
-
     use links_core::unittest::setup;
     use log::info;
-    type CltProtocolManual = CltSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;
-    type SvcProtocolManual = SvcSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;
+    use std::num::NonZeroUsize;
+    type CltProtocolManual = CltSoupBinTcpProtocolManual<SamplePayload, SamplePayload>;
+    type SvcProtocolManual = SvcSoupBinTcpProtocolManual<SamplePayload, SamplePayload>;
 
     #[test]
     fn test_protocol() {
@@ -103,20 +102,23 @@ mod test {
         const SOUP_BIN_MAX_FRAME_SIZE: usize = SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG;
         let clt_count = CounterCallback::new_ref();
         let svc_count = CounterCallback::new_ref();
-        let clt_clbk = ChainCallback::new_ref(vec![clt_count.clone(), LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug)]);
-        let svc_clbk = ChainCallback::new_ref(vec![svc_count.clone(), LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug)]);
+        let clt_clbk = ChainCallback::new_ref(vec![LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug), clt_count.clone()]);
+        let svc_clbk = ChainCallback::new_ref(vec![LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug), svc_count.clone()]);
+        let io_timeout = setup::net::default_io_timeout();
         let addr = setup::net::rand_avail_addr_port();
 
-        let mut svc_sender = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, NonZeroUsize::new(1).unwrap(), svc_clbk.clone(), SvcProtocolManual::default(), Some("svc/soupbintcp/supervised"))
+        let protocol = SvcProtocolManual::default();
+        let mut svc_sender = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, NonZeroUsize::new(1).unwrap(), svc_clbk.clone(), protocol, Some("svc/soupbintcp/supervised"))
             .unwrap()
             .into_sender_with_spawned_recver();
 
+        let protocol = CltProtocolManual::default();
         let mut clt_sender = Clt::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::connect(
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
             clt_clbk.clone(),
-            CltProtocolManual::default(),
+            protocol,
             Some("clt/soupbintcp/supervised"),
         )
         .unwrap()
@@ -124,21 +126,33 @@ mod test {
 
         // client should not send any messages to perform login
         assert_eq!(clt_count.sent_count(), 0);
+        assert_eq!(svc_count.sent_count(), 0);
 
-        info!("svc.all_connected(): {}", svc_sender.all_connected());
-        assert!(!svc_sender.all_connected());
         info!("clt.is_connected(): {}", clt_sender.is_connected());
-        assert!(!clt_sender.is_connected());
+        assert!(clt_sender.is_connected());
+        info!("svc.all_connected(): {}", svc_sender.all_connected_busywait_timeout(io_timeout));
+        assert!(svc_sender.all_connected());
 
-        let timeout = setup::net::default_connect_timeout();
+        const N: usize = 10;
+        for i in 1..=N {
+            clt_sender
+                .send_busywait_timeout(&mut Debug::new(format!("Msg  #{}", i).as_bytes()).into(), io_timeout)
+                .unwrap()
+                .unwrap_completed();
+        }
 
-        clt_sender.send_busywait_timeout(&mut LoginRequest::default().into(), timeout).unwrap().unwrap_completed();
-        svc_sender.send_busywait_timeout(&mut LoginAccepted::default().into(), timeout).unwrap().unwrap_completed();
+        assert_eq!(svc_count.recv_count_busywait_timeout(N, io_timeout), N);
+        assert_eq!(svc_count.sent_count(), 0);
+        info!("svc_count: {}", svc_count);
 
-        assert!(clt_sender.is_connected_busywait_timeout(timeout));
-        assert!(svc_sender.is_next_connected());
-
-        assert_eq!(clt_count.sent_count(), 1);
-        assert_eq!(svc_count.sent_count(), 1);
+        for i in 1..=N {
+            svc_sender
+                .send_busywait_timeout(&mut Debug::new(format!("Msg  #{}", i).as_bytes()).into(), io_timeout)
+                .unwrap()
+                .unwrap_completed();
+        }
+        assert_eq!(clt_count.recv_count_busywait_timeout(N, io_timeout), N);
+        assert_eq!(clt_count.sent_count(), N);
+        info!("clt_count: {}", clt_count);
     }
 }

@@ -10,7 +10,9 @@
         "clippy",
         "Clts",
         "endianness",
+        "favsession",
         "hbeat",
+        "hbeats",
         "nextest",
         "nonblocking",
         "ouch",
@@ -20,8 +22,11 @@
         "rustfmt",
         "sdata",
         "soupbintcp",
+        "spayload",
         "udata",
         "unsequenced",
+        "upayload",
+        "userid",
         "worl"
     ]
 }

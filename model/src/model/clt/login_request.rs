@@ -8,7 +8,7 @@ use crate::model::types::{PacketTypeLoginRequest, Password, SequenceNumber, Sess
 pub const LOGIN_REQUEST_PACKET_LENGTH: u16 = 52;
 pub const LOGIN_REQUEST_BYTE_LEN: usize = LOGIN_REQUEST_PACKET_LENGTH as usize + 2;
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Copy)]
 #[byteserde(endian = "be")]
 pub struct LoginRequest {
     #[serde(default = "default_packet_length", skip_serializing)]

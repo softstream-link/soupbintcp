@@ -7,14 +7,14 @@ use super::unsequenced_data::UPayload;
 
 pub const SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG: usize = 54;
 
-#[rustfmt::skip]
+#[rustfmt::skip] // rustfmt bug: removes UPayload::<P> variant into UPayload<P> variant which is invalid syntax
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug, TryInto)]
 #[byteserde(peek(2, 1))]
-pub enum CltSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
+pub enum CltSoupBinTcpMsg<Payload: SoupBinTcpPayload<Payload>> {
     #[byteserde(eq(PacketTypeUnsequencedData::as_slice()))]
-    UPayload(UPayload::<P>),
+    UPayload(UPayload::<Payload>),
     #[byteserde(eq(PacketTypeSequencedData::as_slice()))]
-    SPayload(SPayload::<P>),
+    SPayload(SPayload::<Payload>),
     #[byteserde(eq(PacketTypeCltHeartbeat::as_slice()))]
     HBeat(CltHeartbeat),
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
@@ -25,7 +25,7 @@ pub enum CltSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
     Logout(LogoutRequest),
 }
 #[rustfmt::skip]
-impl<P: SoupBinTcpPayload<P>> CltSoupBinTcpMsg<P> {
+impl<Payload: SoupBinTcpPayload<Payload>> CltSoupBinTcpMsg<Payload> {
     #[inline(always)]
     pub const fn hbeat() -> Self { Self::HBeat(CltHeartbeat::new()) }
     #[inline(always)]
@@ -35,9 +35,9 @@ impl<P: SoupBinTcpPayload<P>> CltSoupBinTcpMsg<P> {
     #[inline(always)]
     pub fn dbg(text: &[u8]) -> Self { Debug::new(text).into() }
     #[inline(always)]
-    pub fn sdata(payload: P) -> Self { CltSoupBinTcpMsg::SPayload(SPayload::new(payload)) }
+    pub fn sdata(payload: Payload) -> Self { CltSoupBinTcpMsg::SPayload(SPayload::new(payload)) }
     #[inline(always)]
-    pub fn udata(payload: P) -> Self { CltSoupBinTcpMsg::UPayload(UPayload::new(payload)) }
+    pub fn udata(payload: Payload) -> Self { CltSoupBinTcpMsg::UPayload(UPayload::new(payload)) }
 }
 mod from_clt_msgs {
     use super::*;
@@ -67,10 +67,10 @@ mod from_clt_msgs {
     }
 }
 
-#[rustfmt::skip]
+#[rustfmt::skip] // rustfmt bug: removes UPayload::<P> variant into UPayload<P> variant which is invalid syntax
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug, TryInto)]
 #[byteserde(peek(2, 1))]
-pub enum SvcSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
+pub enum SvcSoupBinTcpMsg<Payload: SoupBinTcpPayload<Payload>> {
     #[byteserde(eq(PacketTypeSvcHeartbeat::as_slice()))]
     HBeat(SvcHeartbeat),
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
@@ -82,29 +82,44 @@ pub enum SvcSoupBinTcpMsg<P: SoupBinTcpPayload<P>> {
     #[byteserde(eq(PacketTypeEndOfSession::as_slice()))]
     EndOfSession(EndOfSession),
     #[byteserde(eq(PacketTypeUnsequencedData::as_slice()))]
-    UPayload(UPayload::<P>),
+    UPayload(UPayload::<Payload>),
     #[byteserde(eq(PacketTypeSequencedData::as_slice()))]
-    SPayload(SPayload::<P>),
+    SPayload(SPayload::<Payload>),
 }
 
-#[rustfmt::skip]
-impl<P: SoupBinTcpPayload<P>> SvcSoupBinTcpMsg<P> {
+impl<Payload: SoupBinTcpPayload<Payload>> SvcSoupBinTcpMsg<Payload> {
     #[inline(always)]
-    pub const fn hbeat() -> Self { Self::HBeat( SvcHeartbeat::new() )}
+    pub const fn hbeat() -> Self {
+        Self::HBeat(SvcHeartbeat::new())
+    }
     #[inline(always)]
-    pub fn dbg(text: &[u8]) -> Self { Debug::new(text).into() }
+    pub fn dbg(text: &[u8]) -> Self {
+        Debug::new(text).into()
+    }
     #[inline(always)]
-    pub fn login_acc(session_id: SessionId, sequence_number: SequenceNumber) -> Self { LoginAccepted::new(session_id, sequence_number).into() }
+    pub fn login_acc(session_id: SessionId, sequence_number: SequenceNumber) -> Self {
+        LoginAccepted::new(session_id, sequence_number).into()
+    }
     #[inline(always)]
-    pub fn login_rej_not_auth() -> Self { LoginRejected::not_authorized().into() }
+    pub fn login_rej_not_auth() -> Self {
+        LoginRejected::not_authorized().into()
+    }
     #[inline(always)]
-    pub fn login_rej_ses_not_avail() -> Self { LoginRejected::session_not_available().into() }
+    pub fn login_rej_ses_not_avail() -> Self {
+        LoginRejected::session_not_available().into()
+    }
     #[inline(always)]
-    pub const fn end() -> Self { Self::EndOfSession( EndOfSession::new() ) }
+    pub const fn end() -> Self {
+        Self::EndOfSession(EndOfSession::new())
+    }
     #[inline(always)]
-    pub fn sdata(payload: P) -> Self { Self::SPayload(SPayload::new(payload)) }
+    pub fn sdata(payload: Payload) -> Self {
+        Self::SPayload(SPayload::new(payload))
+    }
     #[inline(always)]
-    pub fn udata(payload: P) -> Self { Self::UPayload(UPayload::new(payload)) }
+    pub fn udata(payload: Payload) -> Self {
+        Self::UPayload(UPayload::new(payload))
+    }
 }
 mod from_svc_msgs {
     use super::*;
@@ -139,49 +154,46 @@ mod from_svc_msgs {
         }
     }
 }
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, TryInto)]
-pub enum SoupBinTcpMsg<CltP, SvcP>
-where
-    CltP: SoupBinTcpPayload<CltP>,
-    SvcP: SoupBinTcpPayload<SvcP>,
-{
+pub enum UniSoupBinTcpMsg<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> {
     Clt(CltSoupBinTcpMsg<CltP>),
     Svc(SvcSoupBinTcpMsg<SvcP>),
 }
-impl<CltP, SvcP> SoupBinTcpMsg<CltP, SvcP>
-where
-    CltP: SoupBinTcpPayload<CltP>,
-    SvcP: SoupBinTcpPayload<SvcP>,
-{
-    pub fn unwrap_clt_u(&self) -> &CltP {
+impl<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> UniSoupBinTcpMsg<CltP, SvcP> {
+    pub fn unwrap_clt(self) -> CltSoupBinTcpMsg<CltP> {
         match self {
-            SoupBinTcpMsg::Clt(CltSoupBinTcpMsg::UPayload(UPayload { payload, .. })) => payload,
-            _ => panic!("SoupBinTcp message is not Clt and/or UPayload, instead it is: {:?}", self),
+            UniSoupBinTcpMsg::Clt(msg) => msg,
+            _ => panic!("SoupBinTcp message is not Clt, instead it is: {:?}", self),
         }
     }
-    pub fn unwrap_svc_u(&self) -> &SvcP {
+    pub fn unwrap_svc(self) -> SvcSoupBinTcpMsg<SvcP> {
         match self {
-            SoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::UPayload(UPayload { payload, .. })) => payload,
-            _ => panic!("SoupBinTcp message is not Svc and/or UPayload, instead it is: {:?}", self),
+            UniSoupBinTcpMsg::Svc(msg) => msg,
+            _ => panic!("SoupBinTcp message is not Svc, instead it is: {:?}", self),
+        }
+    }
+    pub fn unwrap_clt_upayload(self) -> CltP {
+        match self {
+            UniSoupBinTcpMsg::Clt(CltSoupBinTcpMsg::UPayload(UPayload { payload, .. })) => payload,
+            _ => panic!("SoupBinTcp message is not Clt with UPayload, instead it is: {:?}", self),
+        }
+    }
+    pub fn unwrap_svc_spayload(&self) -> &SvcP {
+        match self {
+            UniSoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::SPayload(SPayload { payload, .. })) => payload,
+            _ => panic!("SoupBinTcp message is not Svc with SPayload, instead it is: {:?}", self),
         }
     }
 }
-impl<CltP, SvcP> From<CltSoupBinTcpMsg<CltP>> for SoupBinTcpMsg<CltP, SvcP>
-where
-    CltP: SoupBinTcpPayload<CltP>,
-    SvcP: SoupBinTcpPayload<SvcP>,
-{
+impl<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> From<CltSoupBinTcpMsg<CltP>> for UniSoupBinTcpMsg<CltP, SvcP> {
     fn from(value: CltSoupBinTcpMsg<CltP>) -> Self {
-        SoupBinTcpMsg::Clt(value)
+        UniSoupBinTcpMsg::Clt(value)
     }
 }
-impl<CltP, SvcP> From<SvcSoupBinTcpMsg<SvcP>> for SoupBinTcpMsg<CltP, SvcP>
-where
-    CltP: SoupBinTcpPayload<CltP>,
-    SvcP: SoupBinTcpPayload<SvcP>,
-{
+impl<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> From<SvcSoupBinTcpMsg<SvcP>> for UniSoupBinTcpMsg<CltP, SvcP> {
     fn from(value: SvcSoupBinTcpMsg<SvcP>) -> Self {
-        SoupBinTcpMsg::Svc(value)
+        UniSoupBinTcpMsg::Svc(value)
     }
 }
 
@@ -276,7 +288,7 @@ mod test {
     #[test]
     fn test_soupbintcp_msg_serde() {
         setup::log::configure_compact(LevelFilter::Info);
-        let mut msgs_inp: Vec<SoupBinTcpMsg<SamplePayload, SamplePayload>> = vec![];
+        let mut msgs_inp: Vec<UniSoupBinTcpMsg<SamplePayload, SamplePayload>> = vec![];
         let msgs_clt = clt_msgs_default();
         let msgs_svc = svc_msgs_default();
         for msg in msgs_clt {
@@ -290,7 +302,7 @@ mod test {
             // info!("msg_inp: {:?}", msg);
             let json_out = to_string(msg).unwrap();
             info!("json_out: {}", json_out);
-            let msg_out: SoupBinTcpMsg<SamplePayload, SamplePayload> = from_str(&json_out).unwrap();
+            let msg_out: UniSoupBinTcpMsg<SamplePayload, SamplePayload> = from_str(&json_out).unwrap();
             // info!("msg_out: {:?}", msg_out);
             msgs_out.push(msg_out);
         }

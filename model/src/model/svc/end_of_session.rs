@@ -6,7 +6,7 @@ use crate::model::types::PacketTypeEndOfSession;
 
 pub const END_OF_SESSION_PACKET_LENGTH: u16 = 1;
 pub const END_OF_SESSION_BYTE_LEN: usize = END_OF_SESSION_PACKET_LENGTH as usize + 2;
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone, Copy)]
 #[byteserde(endian = "be")]
 pub struct EndOfSession {
     #[serde(default = "default_packet_length", skip_serializing)]

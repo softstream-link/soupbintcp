@@ -8,7 +8,7 @@ pub const SERVER_HEARTBEAT_PACKET_LENGTH: u16 = 1;
 pub const SERVER_HEARTBEAT_BYTE_LEN: usize = SERVER_HEARTBEAT_PACKET_LENGTH as usize + 2;
 
 #[rustfmt::skip]
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone, Copy)]
 #[byteserde(endian = "be")]
 pub struct SvcHeartbeat {
     #[serde(default = "default_packet_length", skip_serializing)]

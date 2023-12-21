@@ -40,6 +40,17 @@ pub mod soupbintcp_field_types {
             v.to_string().as_bytes().into()
         }
     }
+    impl From<usize> for SequenceNumber {
+        fn from(v: usize) -> Self {
+            v.to_string().as_bytes().into()
+        }
+    }
+    impl From<SequenceNumber> for usize {
+        fn from(v: SequenceNumber) -> Self {
+            let s = std::str::from_utf8(v.as_slice()).unwrap_or_else(|_| panic!("Failed to convert {:?} to usize", v)).trim();
+            s.parse::<usize>().unwrap_or_else(|_| panic!("Failed to convert {:?} to usize", v))
+        }
+    }
     impl Default for SequenceNumber {
         fn default() -> Self {
             // 0 to start receiving the most recently generated message
