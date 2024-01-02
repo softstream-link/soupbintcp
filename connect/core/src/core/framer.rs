@@ -5,7 +5,7 @@ pub struct SoupBinTcpFramer;
 
 impl Framer for SoupBinTcpFramer {
     #[inline(always)]
-    fn get_frame_length(bytes: &mut BytesMut) -> Option<usize> {
+    fn get_frame_length(bytes: &BytesMut) -> Option<usize> {
         PacketLengthU16Framer::<0, true, true>::get_frame_length(bytes)
     }
 }

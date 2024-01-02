@@ -186,14 +186,14 @@ impl<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> UniSoupBinTcp
         }
     }
 }
-impl<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> From<CltSoupBinTcpMsg<CltP>> for UniSoupBinTcpMsg<CltP, SvcP> {
-    fn from(value: CltSoupBinTcpMsg<CltP>) -> Self {
-        UniSoupBinTcpMsg::Clt(value)
+impl<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> From<&CltSoupBinTcpMsg<CltP>> for UniSoupBinTcpMsg<CltP, SvcP> {
+    fn from(value: &CltSoupBinTcpMsg<CltP>) -> Self {
+        UniSoupBinTcpMsg::Clt(value.clone())
     }
 }
-impl<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> From<SvcSoupBinTcpMsg<SvcP>> for UniSoupBinTcpMsg<CltP, SvcP> {
-    fn from(value: SvcSoupBinTcpMsg<SvcP>) -> Self {
-        UniSoupBinTcpMsg::Svc(value)
+impl<CltP: SoupBinTcpPayload<CltP>, SvcP: SoupBinTcpPayload<SvcP>> From<&SvcSoupBinTcpMsg<SvcP>> for UniSoupBinTcpMsg<CltP, SvcP> {
+    fn from(value: &SvcSoupBinTcpMsg<SvcP>) -> Self {
+        UniSoupBinTcpMsg::Svc(value.clone())
     }
 }
 
@@ -292,10 +292,10 @@ mod test {
         let msgs_clt = clt_msgs_default();
         let msgs_svc = svc_msgs_default();
         for msg in msgs_clt {
-            msgs_inp.push(msg.into());
+            msgs_inp.push((&msg).into());
         }
         for msg in msgs_svc {
-            msgs_inp.push(msg.into());
+            msgs_inp.push((&msg).into());
         }
         let mut msgs_out = vec![];
         for msg in msgs_inp.iter() {

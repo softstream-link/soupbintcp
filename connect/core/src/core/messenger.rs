@@ -21,7 +21,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> CltSoupBi
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for CltSoupBinTcpMessenger<RecvP, SendP> {
     #[inline(always)]
-    fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
+    fn get_frame_length(bytes: &bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
@@ -60,7 +60,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBi
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Framer for SvcSoupBinTcpMessenger<RecvP, SendP> {
     #[inline(always)]
-    fn get_frame_length(bytes: &mut bytes::BytesMut) -> Option<usize> {
+    fn get_frame_length(bytes: &bytes::BytesMut) -> Option<usize> {
         SoupBinTcpFramer::get_frame_length(bytes)
     }
 }
