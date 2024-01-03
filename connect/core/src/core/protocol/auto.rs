@@ -365,27 +365,33 @@ mod test {
         info!("svc.all_connected(): {:?}", svc.all_connected());
         assert!(svc.all_connected());
 
-        clt_store
+        let found = clt_store
             .find_recv(
                 "clt/soupbintcp/auto",
                 |msg| matches!(msg, UniSoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::HBeat(_))),
                 setup::net::optional_find_timeout().into(),
             )
             .unwrap();
-        svc_store
+        info!("found: {:?}", found);
+        let found = svc_store
             .find_recv(
                 "svc/soupbintcp/auto",
                 |msg| matches!(msg, UniSoupBinTcpMsg::Clt(CltSoupBinTcpMsg::HBeat(_))),
                 setup::net::optional_find_timeout().into(),
             )
             .unwrap();
+        info!("found: {:?}", found);
 
         const HAND_SHAKE_COUNT: usize = 2; // clt login request & one hbeat | svc login accepted & one hbeat
 
+        info!("clt_count: {}", clt_count);
         assert_eq!(clt_count.sent_count(), HAND_SHAKE_COUNT); // this indicates client sent login request & one hbeat
+        info!("svc_count: {}", svc_count);
         assert_eq!(svc_count.sent_count(), HAND_SHAKE_COUNT); // this indicates server sent login accepted & one hbeat
 
+        info!("clt_count: {}", clt_count);
         assert_eq!(clt_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::find_timeout()), HAND_SHAKE_COUNT); // this indicates client recv login request & one hbeat
+        info!("svc_count: {}", svc_count);
         assert_eq!(svc_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::find_timeout()), HAND_SHAKE_COUNT); // this indicates server recv login accepted & one hbeat
 
         // Connection still valid after hbeats

@@ -130,7 +130,7 @@ mod test {
 
         info!("clt.is_connected(): {}", clt_sender.is_connected());
         assert!(clt_sender.is_connected());
-        info!("svc.all_connected(): {}", svc_sender.all_connected_busywait_timeout(io_timeout));
+        info!("svc.all_connected(): {}", svc_sender.all_connected_busywait_timeout(setup::net::find_timeout()));
         assert!(svc_sender.all_connected());
 
         const N: usize = 10;
