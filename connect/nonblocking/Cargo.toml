@@ -10,7 +10,7 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "A non-blocking implementation of the SOUPBINTCP protocol."
 
 [dependencies]
 soupbintcp_connect_core = { workspace = true }

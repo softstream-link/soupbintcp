@@ -17,24 +17,22 @@ categories = ["API bindings"]
 
 [workspace.dependencies]
 # derive macros
-# byteserde = { version = "0.6" }
-# byteserde_derive = { version = "0.6" }
-# byteserde_types = { version = "0.6" }
-byteserde = { path = "../byteserde/byteserde" }
-byteserde_derive = { path = "../byteserde/byteserde_derive" }
-byteserde_types = { path = "../byteserde/byteserde_types" }
-derive_more = "0.99"                                          # try_into, etc
+byteserde = { version = "0.6" }
+byteserde_derive = { version = "0.6" }
+byteserde_types = { version = "0.6" }
+derive_more = "0.99"                               # try_into, etc
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 
 # project modules
-soupbintcp_model = { path = "./model" }
-soupbintcp_connect_core = { path = "./connect/core" }
-soupbintcp_connect_nonblocking = { path = "./connect/nonblocking" }
+soupbintcp_model = { version = "4.1.0", path = "./model" }
+soupbintcp_connect_core = { version = "4.1.0", path = "./connect/core" }
+soupbintcp_connect_nonblocking = { version = "4.1.0", path = "./connect/nonblocking" }
 
 # 
-links_nonblocking = { path = "../links/nonblocking" }
+links_nonblocking = { version = "0.1" }
+links_core = { version = "0.1" }        # unit tests only
 
 # other dependencies
 bytes = { version = "1.5" } # networking
@@ -44,9 +42,6 @@ spin = { version = "0.9" }  # spinlocks
 log = { version = "0.4" }
 env_logger = { version = "0.10" }
 colored = { version = "2.0" }
-
-# testing
-links_core = { path = "../links/core" } # unit tests only
 
 # benches
 criterion = { version = "0.5" }

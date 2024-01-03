@@ -10,7 +10,7 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Core library for the soupbintcp_connect project"
 
 [dependencies]
 soupbintcp_model = { workspace = true }
