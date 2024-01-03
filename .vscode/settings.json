@@ -1,0 +1,33 @@
+{
+    "rust-analyzer.cargo.features": [
+        "full"
+    ],
+    "workbench.editor.revealIfOpen": true,
+    "cSpell.words": [
+        "busywait",
+        "byteserde",
+        "clbk",
+        "clippy",
+        "Clts",
+        "endianness",
+        "favsession",
+        "hbeat",
+        "hbeats",
+        "nextest",
+        "nonblocking",
+        "ouch",
+        "recved",
+        "Recver",
+        "Recvers",
+        "RUSTDOCFLAGS",
+        "rustfmt",
+        "sdata",
+        "soupbintcp",
+        "spayload",
+        "udata",
+        "unsequenced",
+        "upayload",
+        "userid",
+        "worl"
+    ]
+}

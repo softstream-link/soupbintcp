@@ -1,0 +1,38 @@
+[package]
+name = "soupbintcp_connect_nonblocking"
+version.workspace = true
+authors.workspace = true
+readme.workspace = true
+license-file.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+description = "A non-blocking implementation of the SOUPBINTCP protocol."
+
+[dependencies]
+soupbintcp_connect_core = { workspace = true }
+
+byteserde = { workspace = true }
+
+bytes = { workspace = true }
+
+
+log = { workspace = true, optional = true }
+env_logger = { workspace = true, optional = true }
+colored = { workspace = true, optional = true }
+
+[dev-dependencies]
+
+# includes sample data models
+soupbintcp_model = { workspace = true, features = ["unittest"] }
+
+# includes network related methods for setting up unit tests
+links_core = { workspace = true, features = ["unittest"] }
+
+[features]
+default = []
+full = ["unittest"]
+unittest = ["dep:log", "dep:env_logger", "dep:colored"]

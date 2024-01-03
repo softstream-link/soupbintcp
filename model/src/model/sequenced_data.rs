@@ -1,21 +1,22 @@
+use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use byteserde::prelude::*;
-use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
-
-use super::types::PacketTypeSequencedData;
+use crate::prelude::{PacketTypeSequencedData, SoupBinTcpPayload};
 
 pub const SEQUENCED_DATA_HEADER_BYTE_LEN: usize = 3;
 
-#[rustfmt::skip]
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
 pub struct SPayloadHeader {
+    #[serde(skip)]
     pub packet_length: u16,
+    #[serde(default, skip_serializing)]
     pub packet_type: PacketTypeSequencedData,
 }
 
 impl SPayloadHeader {
+    #[inline(always)]
     pub fn new(packet_length: u16) -> Self {
         SPayloadHeader {
             packet_length,
@@ -23,38 +24,48 @@ impl SPayloadHeader {
         }
     }
 }
-
-#[rustfmt::skip]
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, Debug)]
+/// Sequenced Data Packet
+/// [SOUP TCP/IP Specification](./model/docs/soupbintcp_spec_4.1.pdf)  // TODO - update link to correct path
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[byteserde(endian = "be")]
-pub struct SPayload<Payload>
-where 
-    Payload: ByteSerializeStack + ByteDeserializeSlice<Payload> + ByteSerializedLenOf + PartialEq + Clone + Debug
-{
+#[serde(from = "SPayloadJsonDesShadow<Payload>")]
+pub struct SPayload<Payload: SoupBinTcpPayload<Payload>> {
+    #[serde(skip)]
     header: SPayloadHeader,
     #[byteserde(deplete ( header.packet_length as usize - 1 ))]
-    body: Payload,
+    #[serde(flatten)]
+    pub payload: Payload,
 }
-#[rustfmt::skip]
-impl<Payload: ByteSerializeStack + ByteDeserializeSlice<Payload> + ByteSerializedLenOf + PartialEq + Clone + Debug> SPayload<Payload>
-{
-    pub fn new(body: Payload) -> SPayload<Payload> {
-        let header = SPayloadHeader::new((body.byte_len() + 1) as u16);
-        SPayload { header, body }
+impl<Payload: SoupBinTcpPayload<Payload>> SPayload<Payload> {
+    pub fn new(payload: Payload) -> SPayload<Payload> {
+        let header = SPayloadHeader::new((payload.byte_len() + 1) as u16);
+        SPayload { header, payload }
+    }
+}
+
+// shadow struct for serde deserialization of [SPayload<Payload>], used to setup packet_length field
+#[derive(Deserialize)]
+struct SPayloadJsonDesShadow<Payload: SoupBinTcpPayload<Payload>>(Payload);
+impl<Payload: SoupBinTcpPayload<Payload>> From<SPayloadJsonDesShadow<Payload>> for SPayload<Payload> {
+    fn from(shadow: SPayloadJsonDesShadow<Payload>) -> Self {
+        SPayload {
+            header: SPayloadHeader::new((shadow.0.byte_len() + 1) as u16),
+            payload: shadow.0,
+        }
     }
 }
 
 #[cfg(test)]
-#[cfg(feature="unittest")]
 mod test {
-    use super::*;
-    use crate::model::sample_payload::SamplePayload;
-    use crate::unittest::setup;
-    use log::info;
+    use crate::{model::sequenced_data::SEQUENCED_DATA_HEADER_BYTE_LEN, prelude::*};
+    use byteserde::prelude::*;
+    use links_core::unittest::setup;
+    use log::{info, LevelFilter};
+    use serde_json::{from_str, to_string};
 
     #[test]
     fn test_sequenced_data_header() {
-        setup::log::configure();
+        setup::log::configure_compact(LevelFilter::Info);
         let msg_inp = SPayloadHeader::new(10);
         info!("msg_inp:? {:?}", msg_inp);
 
@@ -67,9 +78,10 @@ mod test {
         info!("msg_out:? {:?}", msg_out);
         assert_eq!(msg_out, msg_inp);
     }
+
     #[test]
-    fn test_sequenced_data() {
-        setup::log::configure();
+    fn test_sequenced_data_byteserde() {
+        setup::log::configure_compact(LevelFilter::Info);
         let expected_len = SEQUENCED_DATA_HEADER_BYTE_LEN + SamplePayload::default().byte_len();
         let msg_inp = SPayload::new(SamplePayload::default());
         info!("msg_inp:? {:?}", msg_inp);
@@ -82,5 +94,30 @@ mod test {
         let msg_out: SPayload<SamplePayload> = from_slice(ser.as_slice()).unwrap();
         info!("msg_out:? {:?}", msg_out);
         assert_eq!(msg_out, msg_inp);
+    }
+
+    #[test]
+    fn test_sequenced_data_serde() {
+        setup::log::configure_compact(LevelFilter::Info);
+
+        let msg_inp = SPayload::new(SamplePayload::default());
+        info!("msg_inp:? {:?}", msg_inp);
+
+        let json_out = to_string(&msg_inp).unwrap();
+        info!("json_out: {}", json_out);
+        assert_eq!(r#"{"context1":"10 char lo","context2":"hello worl"}"#, json_out);
+
+        let msg_out: SPayload<SamplePayload> = from_str(&json_out).unwrap();
+        info!("msg_out:? {:?}", msg_out);
+        assert_eq!(msg_out, msg_inp);
+
+        // acceptable alternatives
+        for (i, pass_json) in vec![r#" { "context1": "10 char lo", "context2": "hello worl" } "#].iter().enumerate() {
+            info!("=========== {} ===========", i + 1);
+            info!("pass_json: {}", pass_json);
+            let msg_out: SPayload<SamplePayload> = from_str(pass_json).unwrap();
+            info!("msg_out:? {:?}", msg_out);
+            assert_eq!(msg_out, msg_inp);
+        }
     }
 }

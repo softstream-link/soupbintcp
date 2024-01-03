@@ -1,20 +1,23 @@
 use byteserde::prelude::*;
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
 use byteserde_types::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
 use super::types::PacketTypeDebug;
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, fmt::Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, fmt::Debug, Clone)]
 #[byteserde(endian = "be")]
+#[serde(from = "DebugJsonDesShadow")]
 pub struct Debug {
+    #[serde(skip)]
     #[byteserde(replace( packet_type.byte_len() + text.byte_len() ))]
     packet_length: u16,
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeDebug,
     #[byteserde(deplete ( packet_length as usize - packet_type.byte_len() ))]
     text: StringAscii,
 }
-
 impl Debug {
     pub fn new(text: &[u8]) -> Self {
         Debug {
@@ -40,16 +43,34 @@ impl fmt::Display for Debug {
     }
 }
 
+// shadow struct for serde deserialization of Debug, used to setup packet_length field
+#[derive(Deserialize, Debug)]
+struct DebugJsonDesShadow {
+    #[serde(default)]
+    packet_type: PacketTypeDebug,
+    text: StringAscii,
+}
+impl From<DebugJsonDesShadow> for Debug {
+    fn from(shadow: DebugJsonDesShadow) -> Self {
+        Debug {
+            packet_length: (shadow.text.byte_len() + shadow.packet_type.byte_len()) as u16,
+            text: shadow.text,
+            packet_type: shadow.packet_type,
+        }
+    }
+}
+
 #[cfg(test)]
-#[cfg(feature="unittest")]
 mod test {
-    use super::*;
-    use crate::unittest::setup;
-    use log::info;
+    use crate::prelude::*;
+    use byteserde::prelude::*;
+    use links_core::unittest::setup;
+    use log::{info, LevelFilter};
+    use serde_json::{from_str, to_string};
 
     #[test]
-    fn test_debug() {
-        setup::log::configure();
+    fn test_debug_byteserde() {
+        setup::log::configure_compact(LevelFilter::Info);
 
         let msg_inp = Debug::default();
         let expected_packet_len: u16 = (msg_inp.text.len() + msg_inp.packet_type.byte_len()) as u16;
@@ -64,12 +85,27 @@ mod test {
 
         let msg_out: Debug = from_serializer_stack(&ser).unwrap();
         info!("msg_out:? {:?}", msg_out);
-        assert_eq!(
-            msg_out,
-            Debug {
-                packet_length: expected_packet_len,
-                ..msg_inp
-            }
-        );
+        assert_eq!(msg_out, Debug { packet_length: expected_packet_len, ..msg_inp });
+    }
+
+    #[test]
+    fn test_debug_serde() {
+        setup::log::configure_compact(LevelFilter::Info);
+
+        let msg_inp = Debug::default();
+        info!("msg_inp:? {:?}", msg_inp);
+
+        let json_out = to_string(&msg_inp).unwrap();
+        info!("json_out: {}", json_out);
+        assert_eq!(r#"{"text":"This is a default debug message text"}"#, json_out);
+
+        // acceptable alternatives
+        for (i, pass_json) in vec![r#" { "text": "This is a default debug message text" } "#].iter().enumerate() {
+            info!("=========== {} ===========", i + 1);
+            info!("pass_json: {}", pass_json);
+            let msg_out: Debug = from_str(pass_json).unwrap();
+            info!("msg_out:? {:?}", msg_out);
+            assert_eq!(msg_out, msg_inp);
+        }
     }
 }

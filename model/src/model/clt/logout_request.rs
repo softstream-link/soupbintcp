@@ -1,4 +1,5 @@
 use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedLenOf};
+use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 
 use crate::model::types::PacketTypeLogoutRequest;
@@ -6,37 +7,46 @@ use crate::model::types::PacketTypeLogoutRequest;
 pub const LOGOUT_REQUEST_PACKET_LENGTH: u16 = 1;
 pub const LOGOUT_REQUEST_BYTE_LEN: usize = LOGOUT_REQUEST_PACKET_LENGTH as usize + 2;
 
-#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, PartialEq, Clone, Debug)]
+#[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Debug, Clone, Copy)]
 #[byteserde(endian = "be")]
 pub struct LogoutRequest {
+    #[serde(default = "default_packet_length", skip_serializing)]
     packet_length: u16,
+    #[serde(default, skip_serializing)]
     packet_type: PacketTypeLogoutRequest,
 }
-impl Default for LogoutRequest {
-    fn default() -> Self {
+impl LogoutRequest {
+    pub const fn new() -> LogoutRequest {
         LogoutRequest {
             packet_length: LOGOUT_REQUEST_PACKET_LENGTH,
-            packet_type: Default::default(),
+            packet_type: PacketTypeLogoutRequest::new(),
         }
     }
 }
-
+impl Default for LogoutRequest {
+    fn default() -> Self {
+        LogoutRequest::new()
+    }
+}
 impl Display for LogoutRequest {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Logout Request")
     }
 }
+fn default_packet_length() -> u16 {
+    LOGOUT_REQUEST_PACKET_LENGTH
+}
 
 #[cfg(test)]
-#[cfg(feature="unittest")]
 mod test {
-    use super::*;
-    use crate::unittest::setup;
+    use crate::{model::clt::logout_request::LOGOUT_REQUEST_BYTE_LEN, prelude::*};
     use byteserde::prelude::*;
+    use links_core::unittest::setup;
     use log::info;
+    use serde_json::{from_str, to_string};
 
     #[test]
-    fn test_login_accepted() {
+    fn test_logout_request_byteserde() {
         setup::log::configure();
         let msg_inp = LogoutRequest::default();
         info!("msg_inp: {}", msg_inp);
@@ -49,5 +59,25 @@ mod test {
         let msg_out: LogoutRequest = from_serializer_stack(&ser).unwrap();
         info!("msg_out:? {:?}", msg_out);
         assert_eq!(msg_out, msg_inp);
+    }
+
+    #[test]
+    fn test_logout_request_serde() {
+        setup::log::configure();
+        let msg_inp = LogoutRequest::default();
+        info!("msg_inp:? {:?}", msg_inp);
+
+        let json_out = to_string(&msg_inp).unwrap();
+        info!("json_out: {}", json_out);
+        assert_eq!(r#"{}"#, json_out);
+
+        // acceptable alternatives
+        for (i, pass_json) in vec![r#" {} "#].iter().enumerate() {
+            info!("=========== {} ===========", i + 1);
+            info!("pass_json: {}", pass_json);
+            let msg_out: LogoutRequest = from_str(&pass_json).unwrap();
+            info!("msg_out:? {:?}", msg_out);
+            assert_eq!(msg_out, msg_inp);
+        }
     }
 }

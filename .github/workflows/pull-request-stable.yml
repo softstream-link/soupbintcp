@@ -1,8 +1,7 @@
-name: Release Branch Build On Stable
+name: Pull Request Build On Stable
 on:
-  push:
-     branches:
-      - 'release*'
+  pull_request:
+
 jobs:
   test-matrix:
     uses: softstream-link/workflows/.github/workflows/rust-test-matrix-toolchain-os.yml@v1
@@ -15,3 +14,4 @@ jobs:
     uses: softstream-link/workflows/.github/workflows/rust-bench-matrix-toolchain-os.yml@v1
     with:
       fail-fast: false
+     
