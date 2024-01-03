@@ -86,7 +86,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
         &self,
         con: &mut C,
     ) -> Result<(), Error> {
-        let mut msg = LoginRequest::new(self.username, self.password, self.session_id, self.sequence_number, self.max_hbeat_send_interval.into()).into();
+        let mut msg = LoginRequest::new(self.username, self.password, self.session_id, self.sequence_number).into();
         match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
             SendStatus::Completed => match con.recv_busywait_timeout(self.io_timeout)? {
                 RecvStatus::Completed(Some(SvcSoupBinTcpMsg::LoginAccepted(_msg))) => Ok(()),
@@ -159,8 +159,9 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBi
     /// * `password` - password to be used during authentication
     /// * `session_id` - session_id to be used during authentication
     /// * `io_timeout` - timeout for login sequence during [`Self::on_connect`] hook
+    /// * `clt_max_hbeat_interval` - maximum interval between receiving heartbeats, if exceeded [`Self::is_connected`] returns `false`
     /// * `svc_max_hbeat_interval` - maximum interval between sending heartbeats, will result in [`Self::conf_heart_beat_interval`] be 2.5 times faster, so if max is set to 25 seconds then heartbeats will be sent every 10 seconds
-    pub fn new(username: UserName, password: Password, session_id: SessionId, io_timeout: Duration, svc_max_hbeat_interval: Duration) -> Self {
+    pub fn new(username: UserName, password: Password, session_id: SessionId, io_timeout: Duration, clt_max_hbeat_interval: Duration, svc_max_hbeat_interval: Duration) -> Self {
         let session_storage = InMemoryMessageLog::<SvcSoupBinTcpMsg<SendP>>::default();
         let session_state = SvcSoupBinTcpSendSessionState::new(session_storage);
         Self {
@@ -169,7 +170,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> SvcSoupBi
             session_id,
             io_timeout,
             svc_max_hbeat_interval,
-            recv_con_state: SvcSoupBinTcpRecvConnectionState::default().into(),
+            recv_con_state: SvcSoupBinTcpRecvConnectionState::new(clt_max_hbeat_interval).into(),
             send_con_state: SvcSoupBinTcpSendConnectionState::default().into(),
             send_ses_state: ProtocolSessionState::new(session_state),
             phantom: PhantomData,
@@ -303,10 +304,9 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 mod test {
 
     use crate::prelude::*;
-    use std::{num::NonZeroUsize, time::Duration};
-
     use links_core::unittest::setup;
     use log::info;
+    use std::{num::NonZeroUsize, time::Duration};
     type CltProtocolAuto = CltSoupBinTcpProtocolAuto<SamplePayload, SamplePayload>;
     type SvcProtocolAuto = SvcSoupBinTcpProtocolAuto<SamplePayload, SamplePayload>;
     type UnitMsg = UniSoupBinTcpMsg<SamplePayload, SamplePayload>;
@@ -341,7 +341,7 @@ mod test {
             LoggerCallback::with_level_ref(log::Level::Info, log::Level::Info),
         ]);
 
-        let protocol = SvcProtocolAuto::new(username, password, session_id, io_timeout, max_hbeat_interval_send);
+        let protocol = SvcProtocolAuto::new(username, password, session_id, io_timeout, max_hbeat_interval_recv, max_hbeat_interval_send);
         let mut svc = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, NonZeroUsize::new(1).unwrap(), svc_clbk.clone(), protocol, Some("svc/soupbintcp/auto"))
             .unwrap()
             .into_sender_with_spawned_recver_ref();
