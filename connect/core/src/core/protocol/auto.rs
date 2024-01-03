@@ -362,7 +362,7 @@ mod test {
         // Connection established LoginAccepted received and within hbeat_interval_recv, hence connection is valid
         info!("clt.is_connected(): {:?}", clt.is_connected());
         assert!(clt.is_connected());
-        info!("svc.all_connected(): {:?}", svc.all_connected());
+        info!("svc.all_connected_busywait_timeout(): {:?}", svc.all_connected_busywait_timeout(setup::net::find_timeout()));
         assert!(svc.all_connected());
 
         let found = clt_store
