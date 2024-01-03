@@ -62,35 +62,43 @@ impl From<CltSoupBinTcpRecvConnectionState> for ProtocolConnectionState<CltSoupB
 }
 
 /// Helper to establish connection status of Svc, uses all recved messages to check.
-/// Confirms that last message received with in `max_recv_interval` duration.
-#[derive(Debug, Clone, Default)]
+/// Confirms that last message received with in `max_recv_interval` [Duration].
+#[derive(Debug, Clone)]
 pub struct SvcSoupBinTcpRecvConnectionState {
-    max_recv_interval: Option<Duration>, // arrives from client in LoginRequest
+    max_recv_interval: Duration,
+    login_requested: Option<Instant>,
+    logout_requested: Option<Instant>,
     any_msg_recved: Option<Instant>,
 }
 impl SvcSoupBinTcpRecvConnectionState {
+    pub fn new(max_recv_interval: Duration) -> Self {
+        Self {
+            max_recv_interval,
+            login_requested: None,
+            logout_requested: None,
+            any_msg_recved: None,
+        }
+    }
     #[inline(always)]
     pub fn on_recv<RecvP: SoupBinTcpPayload<RecvP>>(&mut self, msg: &CltSoupBinTcpMsg<RecvP>) {
         use CltSoupBinTcpMsg::*;
         let now = Instant::now();
-        if let LoginRequest(msg) = msg {
-            self.max_recv_interval = Some(msg.hbeat_timeout_ms.into())
+        match msg {
+            LoginRequest(_msg) => self.login_requested = Some(now),
+            LogoutRequest(_msg) => self.logout_requested = Some(now),
+            _ => {}
         }
-        // match msg {
-        //     Login(msg) => self.max_recv_interval = Some(msg.hbeat_timeout_ms.into()),
-        //     _ => {}
-        // }
         self.any_msg_recved = Some(now);
     }
 }
 impl ConnectionStatus for SvcSoupBinTcpRecvConnectionState {
     /// Will returns `true` if all of below are `true`
     /// * [LoginRequest] was received
-    /// * time elapsed from the last message received is less then `max_recv_interval` which is determine by
-    /// [LoginRequest::hbeat_timeout_ms] from client side.
+    /// * [LogoutRequest] was `NOT` received
+    /// * time elapsed from the last message received is less then [`self.max_recv_interval`] which is set during construction
     fn is_connected(&self) -> bool {
-        match (self.any_msg_recved, self.max_recv_interval) {
-            (Some(any_msg_recved), Some(max_recv_interval)) => any_msg_recved.elapsed() < max_recv_interval,
+        match (self.any_msg_recved, self.login_requested, self.logout_requested) {
+            (Some(any_msg_recved), Some(_login_requested), None) => any_msg_recved.elapsed() < self.max_recv_interval,
             _ => false,
         }
     }

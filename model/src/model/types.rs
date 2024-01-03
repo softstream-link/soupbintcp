@@ -19,7 +19,6 @@ pub mod soupbintcp_packet_types {
 }
 
 pub mod soupbintcp_field_types {
-    use std::time::Duration;
 
     use super::*;
     use byteserde_types::{char_ascii, string_ascii_fixed};
@@ -55,61 +54,6 @@ pub mod soupbintcp_field_types {
         fn default() -> Self {
             // 0 to start receiving the most recently generated message
             b"0".as_slice().into()
-        }
-    }
-
-    string_ascii_fixed!(TimeoutMs, 5, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
-    impl From<u16> for TimeoutMs {
-        fn from(v: u16) -> Self {
-            v.to_string().as_bytes().into()
-        }
-    }
-    impl From<TimeoutMs> for u16 {
-        fn from(v: TimeoutMs) -> Self {
-            let s = std::str::from_utf8(v.as_slice()).unwrap_or_else(|_| panic!("Failed to convert {:?} to u16", v)).trim();
-            s.parse::<u16>().unwrap_or_else(|_| panic!("Failed to convert {:?} to u16", v))
-        }
-    }
-    impl From<TimeoutMs> for u64 {
-        fn from(v: TimeoutMs) -> Self {
-            let s = std::str::from_utf8(v.as_slice()).unwrap_or_else(|_| panic!("Failed to convert {:?} to u64", v)).trim();
-            s.parse::<u64>().unwrap_or_else(|_| panic!("Failed to convert {:?} to u64", v))
-        }
-    }
-    impl From<TimeoutMs> for Duration {
-        fn from(v: TimeoutMs) -> Self {
-            Duration::from_millis(u64::from(v))
-        }
-    }
-    impl From<Duration> for TimeoutMs {
-        fn from(v: Duration) -> Self {
-            assert!(v.as_millis() <= u16::MAX as u128, "Duration {:?} exceeds max of {:?}", v, Duration::from_millis(u16::MAX as u64));
-            (v.as_millis() as u16).into()
-        }
-    }
-
-    #[cfg(test)]
-    mod test_timeout_ms {
-        use super::TimeoutMs;
-        use links_core::unittest::setup;
-        use log::info;
-        use std::time::Duration;
-
-        #[test]
-        fn test_sequence_number() {
-            setup::log::configure();
-            let mut t: TimeoutMs = Duration::from_millis(1000).into();
-            info!("Duration::from_millis: {}", t);
-            let d: Duration = t.into();
-            info!("Duration: {:?}", d);
-            t = 1000_u16.into();
-
-            let millis_u64: u64 = t.into();
-            info!("millis_u64: {}", millis_u64);
-            assert_eq!(millis_u64, 1000);
-            let millis_u16: u16 = t.into();
-            info!("millis_u16: {}", millis_u16);
-            assert_eq!(millis_u16, 1000);
         }
     }
 

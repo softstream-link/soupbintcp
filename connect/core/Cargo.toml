@@ -21,6 +21,7 @@ byteserde = { workspace = true }
 
 bytes = { workspace = true }
 spin = { workspace = true }
+lazy_static = { workspace = true }
 
 env_logger = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }

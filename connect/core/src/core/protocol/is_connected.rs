@@ -1,5 +1,10 @@
 use crate::prelude::*;
+use lazy_static::lazy_static;
 use std::{fmt::Debug, io::Error, marker::PhantomData, time::Duration};
+
+lazy_static! {
+    static ref DEFAULT_MAX_RECV_INTERVAL: Duration = Duration::from_secs_f64(2.5);
+}
 
 /// Implements SoupBinTcp protocol for client side.
 ///
@@ -16,9 +21,8 @@ pub struct CltSoupBinTcpProtocolIsConnected<RecvP: SoupBinTcpPayload<RecvP>, Sen
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for CltSoupBinTcpProtocolIsConnected<RecvP, SendP> {
     fn default() -> Self {
-        let max_recv_interval = Duration::from_secs_f64(2.5);
         Self {
-            recv_con_state: CltSoupBinTcpRecvConnectionState::new(max_recv_interval).into(),
+            recv_con_state: CltSoupBinTcpRecvConnectionState::new(*DEFAULT_MAX_RECV_INTERVAL).into(),
             phantom: PhantomData,
         }
     }
@@ -47,7 +51,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
     #[inline(always)]
     fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
         #[cfg(debug_assertions)]
-        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("CltSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("CltSoupBinTcpProtocolIsConnected", Self), who.con_id(), msg);
 
         (*self.recv_con_state.lock()).on_recv(msg);
     }
@@ -66,7 +70,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 /// * [`Self::on_recv`]
 /// * [`Self::on_sent`]
 /// * [`Self::is_connected`]
-/// 
+///
 /// # [Protocol] Features
 /// * Not implemented - falls back to defaults, which are optimized away by compiler.
 #[derive(Debug, Clone)]
@@ -78,7 +82,7 @@ pub struct SvcSoupBinTcpProtocolIsConnected<RecvP: SoupBinTcpPayload<RecvP>, Sen
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Default for SvcSoupBinTcpProtocolIsConnected<RecvP, SendP> {
     fn default() -> Self {
         Self {
-            recv_con_state: SvcSoupBinTcpRecvConnectionState::default().into(),
+            recv_con_state: SvcSoupBinTcpRecvConnectionState::new(*DEFAULT_MAX_RECV_INTERVAL).into(),
             send_con_state: SvcSoupBinTcpSendConnectionState::default().into(),
             phantom: PhantomData,
         }
@@ -110,7 +114,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
     #[inline(always)]
     fn on_recv<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::RecvT) {
         #[cfg(debug_assertions)]
-        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+        log::debug!("{}::on_recv: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolIsConnected", Self), who.con_id(), msg);
 
         (*self.recv_con_state.lock()).on_recv(msg);
     }
@@ -120,7 +124,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
     #[inline(always)]
     fn on_sent<I: ConnectionId>(&self, who: &I, msg: &<Self as Messenger>::SendT) {
         #[cfg(debug_assertions)]
-        log::debug!("{}::on_sent: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolManual", Self), who.con_id(), msg);
+        log::debug!("{}::on_sent: con_id: {}, msg: {:?}", asserted_short_name!("SvcSoupBinTcpProtocolIsConnected", Self), who.con_id(), msg);
 
         (*self.send_con_state.lock()).on_sent(msg);
     }
@@ -139,12 +143,11 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 mod test {
 
     use crate::prelude::*;
-    use std::num::NonZeroUsize;
-
     use links_core::unittest::setup;
     use log::info;
-    type CltProtocolManual = CltSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;
-    type SvcProtocolManual = SvcSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;
+    use std::num::NonZeroUsize;
+    type CltProtocolIsConnected = CltSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;
+    type SvcProtocolIsConnected = SvcSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;
 
     #[test]
     fn test_protocol() {
@@ -156,7 +159,7 @@ mod test {
         let svc_clbk = ChainCallback::new_ref(vec![svc_count.clone(), LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug)]);
         let addr = setup::net::rand_avail_addr_port();
 
-        let mut svc_sender = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, NonZeroUsize::new(1).unwrap(), svc_clbk.clone(), SvcProtocolManual::default(), Some("svc/soupbintcp/supervised"))
+        let mut svc_sender = Svc::<_, _, SOUP_BIN_MAX_FRAME_SIZE>::bind(addr, NonZeroUsize::new(1).unwrap(), svc_clbk, SvcProtocolIsConnected::default(), Some("svc/soupbintcp/supervised"))
             .unwrap()
             .into_sender_with_spawned_recver();
 
@@ -164,8 +167,8 @@ mod test {
             addr,
             setup::net::default_connect_timeout(),
             setup::net::default_connect_retry_after(),
-            clt_clbk.clone(),
-            CltProtocolManual::default(),
+            clt_clbk,
+            CltProtocolIsConnected::default(),
             Some("clt/soupbintcp/supervised"),
         )
         .unwrap()
@@ -184,8 +187,12 @@ mod test {
         clt_sender.send_busywait_timeout(&mut LoginRequest::default().into(), timeout).unwrap().unwrap_completed();
         svc_sender.send_busywait_timeout(&mut LoginAccepted::default().into(), timeout).unwrap().unwrap_completed();
 
-        assert!(clt_sender.is_connected_busywait_timeout(timeout));
-        assert!(svc_sender.is_next_connected());
+        let clt_is_connected_busywait_timeout = clt_sender.is_connected_busywait_timeout(timeout);
+        info!("clt.is_connected_busywait_timeout(): {}", clt_is_connected_busywait_timeout);
+        assert!(clt_is_connected_busywait_timeout);
+        let is_next_connected = svc_sender.is_next_connected();
+        info!("svc.is_next_connected(): {}", is_next_connected);
+        assert!(is_next_connected);
 
         assert_eq!(clt_count.sent_count(), 1);
         assert_eq!(svc_count.sent_count(), 1);

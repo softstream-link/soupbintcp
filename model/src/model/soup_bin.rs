@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use super::unsequenced_data::UPayload;
 
-pub const SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG: usize = 54;
+pub const SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG: usize = 49;
 
 #[rustfmt::skip] // rustfmt bug: removes UPayload::<P> variant into UPayload<P> variant which is invalid syntax
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Debug, TryInto)]
@@ -18,7 +18,7 @@ pub enum CltSoupBinTcpMsg<Payload: SoupBinTcpPayload<Payload>> {
     #[byteserde(eq(PacketTypeCltHeartbeat::as_slice()))]
     HBeat(CltHeartbeat),
     #[byteserde(eq(PacketTypeDebug::as_slice()))]
-    Dbg(crate::model::debug::Debug),
+    Dbg(crate::prelude::Debug),
     #[byteserde(eq(PacketTypeLoginRequest::as_slice()))]
     LoginRequest(LoginRequest),
     #[byteserde(eq(PacketTypeLogoutRequest::as_slice()))]
@@ -29,7 +29,7 @@ impl<Payload: SoupBinTcpPayload<Payload>> CltSoupBinTcpMsg<Payload> {
     #[inline(always)]
     pub const fn hbeat() -> Self { Self::HBeat(CltHeartbeat::new()) }
     #[inline(always)]
-    pub fn login(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, hbeat_timeout_ms: TimeoutMs) -> Self { LoginRequest::new(username, password, session_id, sequence_number, hbeat_timeout_ms).into() }
+    pub fn login(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber) -> Self { LoginRequest::new(username, password, session_id, sequence_number).into() }
     #[inline(always)]
     pub const fn logout() -> Self { Self::LogoutRequest(LogoutRequest::new()) }
     #[inline(always)]

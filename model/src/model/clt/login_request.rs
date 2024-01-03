@@ -2,10 +2,10 @@ use byteserde_derive::{ByteDeserializeSlice, ByteSerializeStack, ByteSerializedL
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 
-use crate::model::types::{PacketTypeLoginRequest, Password, SequenceNumber, SessionId, TimeoutMs, UserName};
+use crate::model::types::{PacketTypeLoginRequest, Password, SequenceNumber, SessionId, UserName};
 
 // packet_type/1 + usr/6 + pwd/10 + requested_session/10 + requested_sequence_number/20 + heartbeat_timeout_ms/5
-pub const LOGIN_REQUEST_PACKET_LENGTH: u16 = 52;
+pub const LOGIN_REQUEST_PACKET_LENGTH: u16 = 47;
 pub const LOGIN_REQUEST_BYTE_LEN: usize = LOGIN_REQUEST_PACKET_LENGTH as usize + 2;
 
 #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedLenOf, Serialize, Deserialize, PartialEq, Clone, Copy)]
@@ -20,10 +20,9 @@ pub struct LoginRequest {
     pub password: Password,
     pub session_id: SessionId,
     pub sequence_number: SequenceNumber,
-    pub hbeat_timeout_ms: TimeoutMs,
 }
 impl LoginRequest {
-    pub fn new(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber, hbeat_timeout_ms: TimeoutMs) -> LoginRequest {
+    pub fn new(username: UserName, password: Password, session_id: SessionId, sequence_number: SequenceNumber) -> LoginRequest {
         LoginRequest {
             packet_length: LOGIN_REQUEST_PACKET_LENGTH,
             packet_type: Default::default(),
@@ -31,7 +30,6 @@ impl LoginRequest {
             password,
             session_id,
             sequence_number,
-            hbeat_timeout_ms,
         }
     }
 }
@@ -45,21 +43,20 @@ impl Debug for LoginRequest {
             .field("password", &password)
             .field("session_id", &self.session_id)
             .field("sequence_number", &self.sequence_number)
-            .field("hbeat_timeout", &self.hbeat_timeout_ms)
             .finish()
     }
 }
 impl Default for LoginRequest {
     fn default() -> Self {
-        LoginRequest::new(b"dummy".as_slice().into(), b"dummy".as_slice().into(), b"session #1".into(), 1_u64.into(), 1000_u16.into())
+        LoginRequest::new(b"dummy".as_slice().into(), b"dummy".as_slice().into(), b"session #1".into(), 1_u64.into())
     }
 }
 impl Display for LoginRequest {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Login Request, as username \"{}\" requested for session \"{}\", sequence \"{}\", heartbeat timeout {}ms",
-            self.username, self.session_id, self.sequence_number, self.hbeat_timeout_ms,
+            "Login Request, as username \"{}\" requested for session \"{}\", sequence \"{}\"",
+            self.username, self.session_id, self.sequence_number
         )
     }
 }
@@ -81,7 +78,7 @@ mod test {
         info!("msg_inp: {}", msg_inp);
         info!("msg_inp:? {:?}", msg_inp);
 
-        let msg_inp = LoginRequest::new(b"abcdef".into(), b"1234567890".into(), b"session #1".into(), 1_u64.into(), 5000_u16.into());
+        let msg_inp = LoginRequest::new(b"abcdef".into(), b"1234567890".into(), b"session #1".into(), 1_u64.into());
         info!("msg_inp: {}", msg_inp);
         info!("msg_inp:? {:?}", msg_inp);
 
@@ -103,10 +100,16 @@ mod test {
 
         let json_out = to_string(&msg_inp).unwrap();
         info!("json_out: {}", json_out);
-        assert_eq!(r#"{"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"1000"}"#, json_out);
+        assert_eq!(
+            r#"{"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1"}"#,
+            json_out
+        );
 
         // acceptable alternatives
-        for (i, pass_json) in vec![r#" {"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1","hbeat_timeout_ms":"1000"} "#].iter().enumerate() {
+        for (i, pass_json) in vec![r#" {"username":"dummy","password":"dummy","session_id":"session #1","sequence_number":"1"} "#]
+            .iter()
+            .enumerate()
+        {
             info!("=========== {} ===========", i + 1);
             info!("pass_json: {}", pass_json);
             let msg_out: LoginRequest = from_str(pass_json).unwrap();
