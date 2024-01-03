@@ -385,14 +385,14 @@ mod test {
         const HAND_SHAKE_COUNT: usize = 2; // clt login request & one hbeat | svc login accepted & one hbeat
 
         info!("clt_count: {}", clt_count);
-        assert_eq!(clt_count.sent_count(), HAND_SHAKE_COUNT); // this indicates client sent login request & one hbeat
-        info!("svc_count: {}", svc_count);
-        assert_eq!(svc_count.sent_count(), HAND_SHAKE_COUNT); // this indicates server sent login accepted & one hbeat
-
-        info!("clt_count: {}", clt_count);
         assert_eq!(clt_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::find_timeout()), HAND_SHAKE_COUNT); // this indicates client recv login request & one hbeat
         info!("svc_count: {}", svc_count);
         assert_eq!(svc_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::find_timeout()), HAND_SHAKE_COUNT); // this indicates server recv login accepted & one hbeat
+
+        info!("clt_count: {}", clt_count);
+        assert_eq!(clt_count.sent_count(), HAND_SHAKE_COUNT); // this indicates client sent login request & one hbeat
+        info!("svc_count: {}", svc_count);
+        assert_eq!(svc_count.sent_count(), HAND_SHAKE_COUNT); // this indicates server sent login accepted & one hbeat
 
         // Connection still valid after hbeats
         info!("clt.is_connected(): {:?}", clt.is_connected());
