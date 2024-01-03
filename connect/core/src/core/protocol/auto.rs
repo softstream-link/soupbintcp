@@ -321,7 +321,7 @@ mod test {
         let username: UserName = b"userid".as_slice().into();
         let password: Password = b"passwd".as_slice().into();
         let session_id: SessionId = b"favsession".as_slice().into();
-        let io_timeout = setup::net::default_io_timeout();
+        let io_timeout = setup::net::find_timeout(); // use find because this is used while waiting for reply's from server when using auto protocol
 
         let max_hbeat_interval_send = Duration::from_secs_f64(2.5);
         let max_hbeat_interval_recv = max_hbeat_interval_send;

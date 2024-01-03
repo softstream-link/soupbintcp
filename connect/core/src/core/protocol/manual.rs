@@ -141,7 +141,7 @@ mod test {
                 .unwrap_completed();
         }
 
-        assert_eq!(svc_count.recv_count_busywait_timeout(N, io_timeout), N);
+        assert_eq!(svc_count.recv_count_busywait_timeout(N, setup::net::find_timeout()), N);
         assert_eq!(svc_count.sent_count(), 0);
         info!("svc_count: {}", svc_count);
 
@@ -151,7 +151,7 @@ mod test {
                 .unwrap()
                 .unwrap_completed();
         }
-        assert_eq!(clt_count.recv_count_busywait_timeout(N, io_timeout), N);
+        assert_eq!(clt_count.recv_count_busywait_timeout(N, setup::net::find_timeout()), N);
         assert_eq!(clt_count.sent_count(), N);
         info!("clt_count: {}", clt_count);
     }

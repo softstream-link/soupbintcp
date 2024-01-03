@@ -19,6 +19,7 @@
         "recved",
         "Recver",
         "Recvers",
+        "RUSTDOCFLAGS",
         "rustfmt",
         "sdata",
         "soupbintcp",
