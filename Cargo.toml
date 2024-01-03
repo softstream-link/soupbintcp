@@ -4,7 +4,7 @@ members = ["model", "connect/core", "connect/nonblocking"]
 resolver = "2"
 
 [workspace.package]
-version = "4.1.0"                                            # NOTE remembe to update this and sbelow dependencies for byteserde and byteserde_derive
+version = "4.0.0"                                            # NOTE remembe to update this and sbelow dependencies for byteserde and byteserde_derive
 authors = ["Softstream <softstream.link@gmail.com>"]
 readme = "readme.md"
 license-file = "LICENSE"
@@ -26,9 +26,9 @@ serde_json = "1.0"
 
 
 # project modules
-soupbintcp_model = { version = "4.1.0", path = "./model" }
-soupbintcp_connect_core = { version = "4.1.0", path = "./connect/core" }
-soupbintcp_connect_nonblocking = { version = "4.1.0", path = "./connect/nonblocking" }
+soupbintcp_model = { version = "4.0.0", path = "./model" }
+soupbintcp_connect_core = { version = "4.0.0", path = "./connect/core" }
+soupbintcp_connect_nonblocking = { version = "4.0.0", path = "./connect/nonblocking" }
 
 # 
 links_nonblocking = { version = "0.1" }
