@@ -333,12 +333,12 @@ mod test {
         let clt_clbk = ChainCallback::new_ref(vec![
             StoreCallback::new_ref(clt_store.clone()),
             clt_count.clone(),
-            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug),
+            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Info),
         ]);
         let svc_clbk = ChainCallback::new_ref(vec![
             StoreCallback::new_ref(svc_store.clone()),
             svc_count.clone(),
-            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug),
+            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Info),
         ]);
 
         let protocol = SvcProtocolAuto::new(username, password, session_id, io_timeout, max_hbeat_interval_send);
@@ -428,7 +428,7 @@ mod test {
         let clt_clbk_reconnect = ChainCallback::new_ref(vec![
             StoreCallback::new_ref(clt_store_reconnect.clone()),
             clt_count_reconnect.clone(),
-            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Debug),
+            LoggerCallback::with_level_ref(log::Level::Info, log::Level::Info),
         ]);
         let reconnect_sequence_number = 6_usize;
         let protocol_reconnect = CltProtocolAuto::new(
