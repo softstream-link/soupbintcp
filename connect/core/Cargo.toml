@@ -13,7 +13,7 @@ categories.workspace = true
 description = "Core library for the soupbintcp_connect project"
 
 [dependencies]
-soupbintcp_model = { workspace = true }
+soupbintcp_model = { workspace = true, optional = true }
 
 links_nonblocking = { workspace = true }
 
@@ -23,15 +23,20 @@ bytes = { workspace = true }
 spin = { workspace = true }
 lazy_static = { workspace = true }
 
-env_logger = { workspace = true, optional = true }
-colored = { workspace = true, optional = true }
-log = { workspace = true } # TODO only request when debug_assertions are on, how to do this correctly?
+log = { workspace = true } # used in protocosl to add logging during debug build TODO only request when debug_assertions are on, how to do this correctly?
 
 [dev-dependencies]
 soupbintcp_model = { workspace = true, features = ["unittest"] }
 links_core = { workspace = true, features = ["unittest"] }
 
+
+env_logger = { workspace = true }
+colored = { workspace = true }
+
 [features]
-default = []
+default = ["dep:soupbintcp_model"]
 full = ["unittest"]
-unittest = ["dep:env_logger", "dep:colored"]
+unittest = [
+    "dep:soupbintcp_model",
+    "soupbintcp_model/unittest",
+] # exists to provide a vector of all possible default messages

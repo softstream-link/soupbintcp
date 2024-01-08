@@ -211,7 +211,7 @@ mod test {
     fn test_soupbintcp_clt_byteserde() {
         setup::log::configure_compact(LevelFilter::Info);
         let mut ser = ByteSerializerStack::<1024>::default();
-        let msg_inp = clt_msgs_default();
+        let msg_inp = clt_soupbintcp_default_msgs();
 
         for msg in msg_inp.iter() {
             info!("msg_inp: {:?}", msg);
@@ -233,7 +233,7 @@ mod test {
     fn test_soupbintcp_clt_serde() {
         setup::log::configure_compact(LevelFilter::Info);
 
-        let msgs_inp = clt_msgs_default::<SamplePayload>();
+        let msgs_inp = clt_soupbintcp_default_msgs::<SamplePayload>();
         let mut msgs_out = vec![];
         for msg_inp in msgs_inp.iter() {
             // info!("msg_inp: {:?}", msg_inp);
@@ -250,7 +250,7 @@ mod test {
     fn test_soupbintcp_svc_byteserde() {
         setup::log::configure_compact(LevelFilter::Info);
         let mut ser = ByteSerializerStack::<1024>::default();
-        let msg_inp = svc_msgs_default();
+        let msg_inp = svc_soupbintcp_default_msgs();
 
         for msg in msg_inp.iter() {
             info!("msg_inp: {:?}", msg);
@@ -272,7 +272,7 @@ mod test {
     fn test_soupbintcp_svc_serde() {
         setup::log::configure_compact(LevelFilter::Info);
 
-        let msgs_inp = svc_msgs_default::<SamplePayload>();
+        let msgs_inp = svc_soupbintcp_default_msgs::<SamplePayload>();
         let mut msgs_out = vec![];
         for msg_inp in msgs_inp.iter() {
             // info!("msg_inp: {:?}", msg_inp);
@@ -289,8 +289,8 @@ mod test {
     fn test_soupbintcp_msg_serde() {
         setup::log::configure_compact(LevelFilter::Info);
         let mut msgs_inp: Vec<UniSoupBinTcpMsg<SamplePayload, SamplePayload>> = vec![];
-        let msgs_clt = clt_msgs_default();
-        let msgs_svc = svc_msgs_default();
+        let msgs_clt = clt_soupbintcp_default_msgs();
+        let msgs_svc = svc_soupbintcp_default_msgs();
         for msg in msgs_clt {
             msgs_inp.push((&msg).into());
         }
@@ -312,8 +312,8 @@ mod test {
     #[test]
     fn test_soupbintcp_max_frame_size() {
         setup::log::configure_compact(LevelFilter::Info);
-        let msg_inp_clt = clt_msgs_default::<Nil>().into_iter().map(|msg| (msg.byte_len(), msg)).collect::<Vec<_>>();
-        let msg_inp_svc = svc_msgs_default::<Nil>().into_iter().map(|msg| (msg.byte_len(), msg)).collect::<Vec<_>>();
+        let msg_inp_clt = clt_soupbintcp_default_msgs::<Nil>().into_iter().map(|msg| (msg.byte_len(), msg)).collect::<Vec<_>>();
+        let msg_inp_svc = svc_soupbintcp_default_msgs::<Nil>().into_iter().map(|msg| (msg.byte_len(), msg)).collect::<Vec<_>>();
         for (byte_len, msg) in msg_inp_clt.iter() {
             info!("byte_len: {:>3}, msg:? {:?} ", byte_len, msg);
         }

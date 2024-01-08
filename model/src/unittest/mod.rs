@@ -3,7 +3,7 @@ pub mod setup {
         use crate::prelude::*;
 
         #[rustfmt::skip]
-        pub fn svc_msgs_default<P>() -> Vec<SvcSoupBinTcpMsg<P>>
+        pub fn svc_soupbintcp_default_msgs<P>() -> Vec<SvcSoupBinTcpMsg<P>>
         where
             P: SoupBinTcpPayload<P> + Default,
         {
@@ -19,7 +19,7 @@ pub mod setup {
         }
 
         #[rustfmt::skip]
-        pub fn clt_msgs_default<P>() -> Vec<CltSoupBinTcpMsg<P>>
+        pub fn clt_soupbintcp_default_msgs<P>() -> Vec<CltSoupBinTcpMsg<P>>
         where
             P: SoupBinTcpPayload<P> + Default,
         {

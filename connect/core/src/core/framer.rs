@@ -18,7 +18,7 @@ mod test {
     use byteserde::prelude::*;
     use log::info;
 
-    use soupbintcp_model::unittest::setup::model::{clt_msgs_default, svc_msgs_default};
+    use soupbintcp_model::unittest::setup::model::{clt_soupbintcp_default_msgs, svc_soupbintcp_default_msgs};
     use links_core::unittest::setup;
 
     #[test]
@@ -26,7 +26,7 @@ mod test {
         setup::log::configure();
         const CAP: usize = 1024;
         let mut ser = ByteSerializerStack::<CAP>::default();
-        let msg_inp = clt_msgs_default();
+        let msg_inp = clt_soupbintcp_default_msgs();
         for msg in msg_inp.iter() {
             info!("msg_inp {:?}", msg);
             let _ = ser.serialize(msg).unwrap();
@@ -56,7 +56,7 @@ mod test {
         setup::log::configure();
         const CAP: usize = 1024;
         let mut ser = ByteSerializerStack::<CAP>::default();
-        let msg_inp = svc_msgs_default();
+        let msg_inp = svc_soupbintcp_default_msgs();
         for msg in msg_inp.iter() {
             // info!("msg_inp {:?}", msg);
             let len = ser.len();
