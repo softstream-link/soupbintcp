@@ -1,5 +1,4 @@
-use crate::prelude::*;
-
+use links_nonblocking::prelude::*;
 pub type SvcSoupBinTcp<P, C, const MAX_MSG_SIZE: usize> = Svc<P, C, MAX_MSG_SIZE>;
 
 pub type SvcSoupBinTcpSender<P, C, const MAX_MSG_SIZE: usize> = SvcSender<P, C, MAX_MSG_SIZE>;
@@ -10,7 +9,7 @@ pub type SvcSoupBinTcpSenderRef<P, C, const MAX_MSG_SIZE: usize> = SvcSenderRef<
 mod test {
 
     use crate::prelude::*;
-    use links_core::unittest::setup;
+    use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
     use std::num::NonZeroUsize;
 

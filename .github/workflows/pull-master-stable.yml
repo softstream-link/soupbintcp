@@ -1,6 +1,10 @@
-name: Pull Request Build On Stable
+name: Pull/Master Control Build
 on:
   pull_request:
+  push:
+    branches:
+      - release*
+      - master
 
 jobs:
   test-matrix:

@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use links_nonblocking::prelude::*;
 use lazy_static::lazy_static;
 use std::{fmt::Debug, io::Error, marker::PhantomData, time::Duration};
 
@@ -143,7 +144,8 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 mod test {
 
     use crate::prelude::*;
-    use links_core::unittest::setup;
+    use links_nonblocking::prelude::*;
+    use links_nonblocking::prelude::unittest::setup;
     use log::info;
     use std::num::NonZeroUsize;
     type CltProtocolIsConnected = CltSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;

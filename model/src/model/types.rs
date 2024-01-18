@@ -32,7 +32,6 @@ pub mod soupbintcp_field_types {
         }
     }
 
-    // TODO add docs https://stackoverflow.com/questions/33999341/generating-documentation-in-macros
     string_ascii_fixed!(SequenceNumber, 20, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
     impl From<u64> for SequenceNumber {
         fn from(v: u64) -> Self {

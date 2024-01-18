@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use links_nonblocking::prelude::*;
 use std::{fmt::Debug, io::Error, marker::PhantomData};
 
 /// Implements SoupBinTcp protocol for client side.
@@ -90,7 +91,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 mod test {
 
     use crate::prelude::*;
-    use links_core::unittest::setup;
+    use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
     use std::num::NonZeroUsize;
     type CltProtocolManual = CltSoupBinTcpProtocolManual<SamplePayload, SamplePayload>;
@@ -130,7 +131,10 @@ mod test {
 
         info!("clt.is_connected(): {}", clt_sender.is_connected());
         assert!(clt_sender.is_connected());
-        info!("svc.all_connected_busywait_timeout(): {}", svc_sender.all_connected_busywait_timeout(setup::net::find_timeout()));
+        info!(
+            "svc.all_connected_busywait_timeout(): {}",
+            svc_sender.all_connected_busywait_timeout(setup::net::default_find_timeout())
+        );
         assert!(svc_sender.all_connected());
 
         const N: usize = 10;
@@ -141,7 +145,7 @@ mod test {
                 .unwrap_completed();
         }
 
-        assert_eq!(svc_count.recv_count_busywait_timeout(N, setup::net::find_timeout()), N);
+        assert_eq!(svc_count.recv_count_busywait_timeout(N, setup::net::default_find_timeout()), N);
         assert_eq!(svc_count.sent_count(), 0);
         info!("svc_count: {}", svc_count);
 
@@ -151,7 +155,7 @@ mod test {
                 .unwrap()
                 .unwrap_completed();
         }
-        assert_eq!(clt_count.recv_count_busywait_timeout(N, setup::net::find_timeout()), N);
+        assert_eq!(clt_count.recv_count_busywait_timeout(N, setup::net::default_find_timeout()), N);
         assert_eq!(clt_count.sent_count(), N);
         info!("clt_count: {}", clt_count);
     }

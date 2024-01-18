@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use bytes::BytesMut;
+use links_nonblocking::prelude::*;
 
 pub struct SoupBinTcpFramer;
 
@@ -16,10 +16,9 @@ mod test {
     use crate::prelude::*;
     use bytes::{BufMut, BytesMut};
     use byteserde::prelude::*;
+    use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
-
     use soupbintcp_model::unittest::setup::model::{clt_msgs_default, svc_msgs_default};
-    use links_core::unittest::setup;
 
     #[test]
     fn test_soup_bin_clt_framing() {
@@ -61,12 +60,7 @@ mod test {
             // info!("msg_inp {:?}", msg);
             let len = ser.len();
             let _ = ser.serialize(msg).unwrap();
-            info!(
-                "msg.len() {}, \tser.len(): {},\tmsg_inp {:?}",
-                ser.len() - len,
-                ser.len(),
-                msg
-            );
+            info!("msg.len() {}, \tser.len(): {},\tmsg_inp {:?}", ser.len() - len, ser.len(), msg);
         }
         info!("ser: {:#x}", ser);
 
@@ -84,12 +78,7 @@ mod test {
                 Some(frame) => {
                     let des = &mut ByteDeserializerSlice::new(&frame[..]);
                     let msg = SvcSoupBinTcpMsg::byte_deserialize(des).unwrap();
-                    info!(
-                        "frame.len(): {}, \tbyte.len(): {}, msg_out {:?}",
-                        frame.len(),
-                        len,
-                        msg
-                    );
+                    info!("frame.len(): {}, \tbyte.len(): {}, msg_out {:?}", frame.len(), len, msg);
                     msg_out.push(msg);
                 }
                 None => {

@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use links_nonblocking::prelude::*;
 
 pub type CltSoupBinTcp<P, C, const MAX_MSG_SIZE: usize> = Clt<P, C, MAX_MSG_SIZE>;
 
@@ -10,7 +10,7 @@ pub type CltSoupBinTcpSenderRef<P, C, const MAX_MSG_SIZE: usize> = CltSenderRef<
 mod test {
 
     use crate::prelude::*;
-    use links_core::unittest::setup;
+    use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
 
     #[test]

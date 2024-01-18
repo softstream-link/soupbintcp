@@ -1,11 +1,11 @@
+use crate::prelude::*;
+use byteserde::prelude::{from_slice, to_bytes_stack};
+use links_nonblocking::prelude::*;
 use std::{
     fmt::Debug,
     io::{Error, ErrorKind},
     marker::PhantomData,
 };
-
-use crate::prelude::*;
-use byteserde::prelude::{from_slice, to_bytes_stack};
 
 /// Performs two tasks
 ///  * Divides [bytes::BytesMut] into frames and deserializes into a [SvcSoupBinTcpMsg] type
@@ -92,9 +92,8 @@ mod test {
     use crate::prelude::*;
     use bytes::{BufMut, BytesMut};
     use byteserde::prelude::*;
+    use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
-
-    use links_core::unittest::setup;
     use soupbintcp_model::unittest::setup::model::{clt_msgs_default, svc_msgs_default};
 
     type CltMessenger = CltSoupBinTcpMessenger<SamplePayload, SamplePayload>;

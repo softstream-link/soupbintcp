@@ -20,9 +20,13 @@ byteserde_types = { workspace = true }
 derive_more = { workspace = true }
 serde = { workspace = true }
 
-links_core = { workspace = true } # short_name_type macro
+links_core = { workspace = true }
 
 [dev-dependencies]
+links_core = { workspace = true, features = [
+    "unittest",
+] } # used for testing unittest::setup modules
+
 # benchmarking
 criterion = { workspace = true }
 
@@ -31,8 +35,6 @@ log = { workspace = true }
 env_logger = { workspace = true }
 colored = { workspace = true }
 
-# testing
-links_core = { workspace = true, features = ["unittest"] }
 serde_json = { workspace = true }
 
 [features]

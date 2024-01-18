@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use links_nonblocking::prelude::*;
 use std::{
     fmt::Debug,
     io::{Error, ErrorKind},
@@ -304,7 +305,7 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 mod test {
 
     use crate::prelude::*;
-    use links_core::unittest::setup;
+    use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
     use std::{num::NonZeroUsize, time::Duration};
     type CltProtocolAuto = CltSoupBinTcpProtocolAuto<SamplePayload, SamplePayload>;
@@ -321,7 +322,7 @@ mod test {
         let username: UserName = b"userid".as_slice().into();
         let password: Password = b"passwd".as_slice().into();
         let session_id: SessionId = b"favsession".as_slice().into();
-        let io_timeout = setup::net::find_timeout(); // use find because this is used while waiting for reply's from server when using auto protocol
+        let io_timeout = setup::net::default_find_timeout(); // use find because this is used while waiting for reply's from server when using auto protocol
 
         let max_hbeat_interval_send = Duration::from_secs_f64(2.5);
         let max_hbeat_interval_recv = max_hbeat_interval_send;
@@ -362,14 +363,14 @@ mod test {
         // Connection established LoginAccepted received and within hbeat_interval_recv, hence connection is valid
         info!("clt.is_connected(): {:?}", clt.is_connected());
         assert!(clt.is_connected());
-        info!("svc.all_connected_busywait_timeout(): {:?}", svc.all_connected_busywait_timeout(setup::net::find_timeout()));
+        info!("svc.all_connected_busywait_timeout(): {:?}", svc.all_connected_busywait_timeout(setup::net::default_find_timeout()));
         assert!(svc.all_connected());
 
         let found = clt_store
             .find_recv(
                 "clt/soupbintcp/auto",
                 |msg| matches!(msg, UniSoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::HBeat(_))),
-                setup::net::optional_find_timeout().into(),
+                setup::net::default_optional_find_timeout().into(),
             )
             .unwrap();
         info!("found: {:?}", found);
@@ -377,7 +378,7 @@ mod test {
             .find_recv(
                 "svc/soupbintcp/auto",
                 |msg| matches!(msg, UniSoupBinTcpMsg::Clt(CltSoupBinTcpMsg::HBeat(_))),
-                setup::net::optional_find_timeout().into(),
+                setup::net::default_optional_find_timeout().into(),
             )
             .unwrap();
         info!("found: {:?}", found);
@@ -385,9 +386,9 @@ mod test {
         const HAND_SHAKE_COUNT: usize = 2; // clt login request & one hbeat | svc login accepted & one hbeat
 
         info!("clt_count: {}", clt_count);
-        assert_eq!(clt_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::find_timeout()), HAND_SHAKE_COUNT); // this indicates client recv login request & one hbeat
+        assert_eq!(clt_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::default_find_timeout()), HAND_SHAKE_COUNT); // this indicates client recv login request & one hbeat
         info!("svc_count: {}", svc_count);
-        assert_eq!(svc_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::find_timeout()), HAND_SHAKE_COUNT); // this indicates server recv login accepted & one hbeat
+        assert_eq!(svc_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT, setup::net::default_find_timeout()), HAND_SHAKE_COUNT); // this indicates server recv login accepted & one hbeat
 
         info!("clt_count: {}", clt_count);
         assert_eq!(clt_count.sent_count(), HAND_SHAKE_COUNT); // this indicates client sent login request & one hbeat
@@ -414,7 +415,7 @@ mod test {
 
         assert_eq!(svc_count.sent_count(), HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS + N_UN_SEQUENCED_PAYLOADS); // this indicates server sent login accepted & one hbeat + N_SEQUENCED_PAYLOADS which are now in the internal session cache
         assert_eq!(
-            clt_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS + N_UN_SEQUENCED_PAYLOADS, setup::net::optional_find_timeout().unwrap()),
+            clt_count.recv_count_busywait_timeout(HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS + N_UN_SEQUENCED_PAYLOADS, setup::net::default_optional_find_timeout().unwrap()),
             HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS + N_UN_SEQUENCED_PAYLOADS
         );
         info!("clt_count: {}", clt_count);
@@ -456,7 +457,7 @@ mod test {
         let clt_reconnect_expected_recv = HAND_SHAKE_COUNT + N_SEQUENCED_PAYLOADS - reconnect_sequence_number + 1;
         info!("clt_count_reconnect: {}", clt_count_reconnect);
         assert_eq!(
-            clt_count_reconnect.recv_count_busywait_timeout(clt_reconnect_expected_recv, setup::net::find_timeout()),
+            clt_count_reconnect.recv_count_busywait_timeout(clt_reconnect_expected_recv, setup::net::default_find_timeout()),
             clt_reconnect_expected_recv
         );
         info!("clt_count_reconnect: {}", clt_count_reconnect);
@@ -472,7 +473,7 @@ mod test {
                     }) ) if payload == &SamplePayload::new(format!("#{} SPayload", 10).as_bytes().into()) // last resent SPayload
                 )
             },
-            setup::net::optional_find_timeout().into(),
+            setup::net::default_optional_find_timeout().into(),
         );
 
         info!("found: {:?}", found);
@@ -484,7 +485,7 @@ mod test {
         let found = clt_store_reconnect.find_recv(
             "clt_reconnect/soupbintcp/auto",
             |msg| matches!(msg, UniSoupBinTcpMsg::Svc(SvcSoupBinTcpMsg::EndOfSession(_))),
-            setup::net::optional_find_timeout().into(),
+            setup::net::default_optional_find_timeout().into(),
         );
         info!("found: {:?}", found);
         assert!(found.is_some());

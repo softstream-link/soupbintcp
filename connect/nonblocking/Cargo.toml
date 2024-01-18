@@ -14,6 +14,7 @@ description = "A non-blocking implementation of the SOUPBINTCP protocol."
 
 [dependencies]
 soupbintcp_connect_core = { workspace = true }
+links_nonblocking = { workspace = true }
 
 byteserde = { workspace = true }
 
@@ -25,12 +26,8 @@ env_logger = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }
 
 [dev-dependencies]
-
 # includes sample data models
 soupbintcp_model = { workspace = true, features = ["unittest"] }
-
-# includes network related methods for setting up unit tests
-links_core = { workspace = true, features = ["unittest"] }
 
 [features]
 default = []
