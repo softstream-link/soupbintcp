@@ -2,8 +2,8 @@ pub mod auto;
 pub mod is_connected;
 pub mod manual;
 
-use crate::prelude::*;
 use links_nonblocking::prelude::*;
+use soupbintcp_model::prelude::*;
 use std::{
     fmt::Debug,
     time::{Duration, Instant},

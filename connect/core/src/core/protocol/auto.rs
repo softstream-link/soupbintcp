@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use links_nonblocking::prelude::*;
+use soupbintcp_model::prelude::*;
 use std::{
     fmt::Debug,
     io::{Error, ErrorKind},
@@ -307,6 +308,7 @@ mod test {
     use crate::prelude::*;
     use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
+    use soupbintcp_model::prelude::*;
     use std::{num::NonZeroUsize, time::Duration};
     type CltProtocolAuto = CltSoupBinTcpProtocolAuto<SamplePayload, SamplePayload>;
     type SvcProtocolAuto = SvcSoupBinTcpProtocolAuto<SamplePayload, SamplePayload>;
@@ -314,7 +316,6 @@ mod test {
 
     #[test]
     fn test_protocol() {
-        // setup::log::configure_compact(log::LevelFilter::Info);
         setup::log::configure_level(log::LevelFilter::Info);
 
         const SOUP_BIN_MAX_FRAME_SIZE: usize = SOUPBINTCP_MAX_FRAME_SIZE_EXCLUDING_PAYLOAD_DEBUG;

@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use links_nonblocking::prelude::*;
+use soupbintcp_model::prelude::*;
 use std::{fmt::Debug, io::Error, marker::PhantomData};
 
 /// Implements SoupBinTcp protocol for client side.
@@ -93,6 +94,7 @@ mod test {
     use crate::prelude::*;
     use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
+    use soupbintcp_model::prelude::*;
     use std::num::NonZeroUsize;
     type CltProtocolManual = CltSoupBinTcpProtocolManual<SamplePayload, SamplePayload>;
     type SvcProtocolManual = SvcSoupBinTcpProtocolManual<SamplePayload, SamplePayload>;

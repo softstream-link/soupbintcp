@@ -18,6 +18,7 @@ mod test {
     use byteserde::prelude::*;
     use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
+    use soupbintcp_model::prelude::*;
     use soupbintcp_model::unittest::setup::model::{clt_msgs_default, svc_msgs_default};
 
     #[test]

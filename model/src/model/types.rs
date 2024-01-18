@@ -19,10 +19,12 @@ pub mod soupbintcp_packet_types {
 }
 
 pub mod soupbintcp_field_types {
-
+    fn short_type_name<T: ?Sized>() -> &'static str {
+        use std::any::type_name;
+        type_name::<T>().split('<').next().unwrap().split("::").last().unwrap_or("Unknown")
+    }
     use super::*;
     use byteserde_types::{char_ascii, string_ascii_fixed};
-    use links_core::core::macros::short_type_name;
 
     string_ascii_fixed!(SessionId, 10, b' ', true, true, #[derive(ByteSerializeStack, ByteDeserializeSlice, ByteSerializedSizeOf, ByteSerializedLenOf, PartialEq, Clone, Copy)]);
     impl Default for SessionId {
