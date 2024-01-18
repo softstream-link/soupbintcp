@@ -1,6 +1,7 @@
 use crate::prelude::*;
-use links_nonblocking::prelude::*;
 use lazy_static::lazy_static;
+use links_nonblocking::prelude::*;
+use soupbintcp_model::prelude::*;
 use std::{fmt::Debug, io::Error, marker::PhantomData, time::Duration};
 
 lazy_static! {
@@ -144,9 +145,9 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol 
 mod test {
 
     use crate::prelude::*;
-    use links_nonblocking::prelude::*;
-    use links_nonblocking::prelude::unittest::setup;
+    use links_nonblocking::prelude::{unittest::setup, *};
     use log::info;
+    use soupbintcp_model::prelude::*;
     use std::num::NonZeroUsize;
     type CltProtocolIsConnected = CltSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;
     type SvcProtocolIsConnected = SvcSoupBinTcpProtocolIsConnected<SamplePayload, SamplePayload>;

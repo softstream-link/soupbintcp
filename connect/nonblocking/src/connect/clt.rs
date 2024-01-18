@@ -11,6 +11,7 @@ mod test {
 
     use crate::prelude::*;
     use links_nonblocking::prelude::{unittest::setup, *};
+    use soupbintcp_model::prelude::*;
     use log::info;
 
     #[test]
