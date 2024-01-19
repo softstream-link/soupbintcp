@@ -1,3 +1,3 @@
 # Content
-* [Data Model](model/readme.md) - contains SoupBin data structure bindings
-  
+## Model documentation
+* [Soup Bin Tcp](./docs/soupbintcp_spec_4.0.pdf)
