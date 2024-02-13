@@ -1,6 +1,5 @@
 name: Pull/Master Control Build
 on:
-  pull_request:
   push:
     branches:
       - release*

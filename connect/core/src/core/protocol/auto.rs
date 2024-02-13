@@ -254,6 +254,17 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
             RecvStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("Did not get LoginRequest during timeout: {:?}", self.io_timeout))),
         }
     }
+    /// Returns a tuple of
+    /// * [Duration] - the timeout during which the [CltSender] will wait while delivering final message before disconnecting
+    /// * [EndOfSession] - the message to be sent to the client
+    #[inline(always)]
+    fn on_disconnect<C: SendNonBlocking<<Self as Messenger>::SendT> + ReSendNonBlocking<<Self as Messenger>::SendT> + ConnectionId>(&self, con: &mut C) -> Result<(), Error> {
+        let mut msg = EndOfSession::default().into();
+        match con.send_busywait_timeout(&mut msg, self.io_timeout)? {
+            SendStatus::Completed => Ok(()),
+            SendStatus::WouldBlock => Err(Error::new(ErrorKind::TimedOut, format!("timeout: {:?} sending msg: {:?}", self.io_timeout, msg))),
+        }
+    }
     /// Will delegate to [`SvcSoupBinTcpRecvConnectionState::on_recv`]
     #[allow(unused_variables)] // when compiled in release mode `who` is not used
     #[inline(always)]
@@ -280,13 +291,6 @@ impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> ProtocolC
     #[inline(always)]
     fn is_connected(&self) -> bool {
         (*self.recv_con_state.lock()).is_connected() && (*self.send_con_state.lock()).is_connected()
-    }
-    /// Returns a tuple of
-    /// * [Duration] - the timeout during which the [CltSender] will wait while delivering final message before disconnecting
-    /// * [EndOfSession] - the message to be sent to the client
-    #[inline(always)]
-    fn on_disconnect(&self) -> Option<(Duration, <Self as Messenger>::SendT)> {
-        Some((self.io_timeout, EndOfSession::default().into()))
     }
 }
 impl<RecvP: SoupBinTcpPayload<RecvP>, SendP: SoupBinTcpPayload<SendP>> Protocol for SvcSoupBinTcpProtocolAuto<RecvP, SendP> {

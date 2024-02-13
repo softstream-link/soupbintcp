@@ -40,7 +40,7 @@ spin = { version = "0.9" }          # spinlocks
 lazy_static = { version = "1.4.0" }
 # logging
 log = { version = "0.4" }
-env_logger = { version = "0.10" }
+env_logger = { version = "0.11" }
 colored = { version = "2.0" }
 # benches
 criterion = { version = "0.5" }
